@@ -1,4 +1,5 @@
 // punabot.js
+import express from 'express';
 import { Client, GatewayIntentBits, REST, Routes } from 'discord.js';
 import fetch from 'node-fetch';
 
@@ -6,6 +7,18 @@ import fetch from 'node-fetch';
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 const HYPIXEL_KEY = process.env.HYPIXEL_KEY;
+
+// --- Health check server for Koyeb ---
+const app = express();
+const PORT = process.env.PORT || 8000;
+
+app.get('/', (req, res) => {
+  res.send('Bot is running ✅');
+});
+
+app.listen(PORT, () => {
+  console.log(`Health check server listening on port ${PORT}`);
+});
 
 // Create client
 const client = new Client({
@@ -159,4 +172,5 @@ client.on('interactionCreate', async (interaction) => {
 
 // Login
 client.login(DISCORD_TOKEN);
+
 
