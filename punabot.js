@@ -12,8 +12,8 @@ const client = new Client({
 });
 
 // Environment variables (set these in Katabump dashboard)
-const DISCORD_TOKEN = 46a8411e5abff357186dab03a7b3d89c18f6551e6221813189104a6f36c8bb1d
-const HYPIXEL_KEY = d19b7741-ca86-410f-aab5-be00c2587f0e
+const DISCORD_TOKEN = process.env.bottoken
+const HYPIXEL_KEY = process.env.hypixelapi
 
 // Store active RPS games
 let activeGames = {};
@@ -108,3 +108,4 @@ client.on('messageCreate', async (message) => {
 
 // Login
 client.login(DISCORD_TOKEN);
+
