@@ -35,9 +35,11 @@ client.on('messageCreate', async (message) => {
 
   // --- Ping command ---
   if (message.content === '!ping') {
-    return message.reply('Pong! 🏓');
+    return message.reply('Pong, I am here!');
   }
-
+  if (message.content === '!echo') {
+    return message.reply('Echo Goes Through Yours Ears!');
+  }
   // --- Bedwars stats ---
   if (message.content.startsWith('!bedwars')) {
     const username = message.content.split(' ')[1];
@@ -108,6 +110,7 @@ client.on('messageCreate', async (message) => {
 
 // Login
 client.login(DISCORD_TOKEN);
+
 
 
 
