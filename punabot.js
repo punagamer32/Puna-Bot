@@ -75,7 +75,7 @@ const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
 })();
 
 // Ready event
-client.once('ready', () => {
+client.once('clientReady', () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
   client.user.setPresence({
     activities: [{ name: 'Sub To punagamer32 On YouTube', type: 0 }],
@@ -159,3 +159,4 @@ client.on('interactionCreate', async (interaction) => {
 
 // Login
 client.login(DISCORD_TOKEN);
+
