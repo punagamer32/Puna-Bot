@@ -1,5 +1,5 @@
 // punabot.js
-const { Client, GatewayIntentBits } = require('discord.js');
+import { Client, GatewayIntentBits } from 'discord.js';
 import fetch from 'node-fetch';
 
 // Create client
@@ -108,6 +108,7 @@ client.on('messageCreate', async (message) => {
 
 // Login
 client.login(DISCORD_TOKEN);
+
 
 
 
