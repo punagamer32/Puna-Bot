@@ -19,7 +19,7 @@ const HYPIXEL_KEY = process.env.HYPIXEL_KEY
 let activeGames = {};
 
 // Ready event
-client.once('ready', () => {
+client.once('clientReady', () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 
   // Set bot presence
@@ -110,6 +110,7 @@ client.on('messageCreate', async (message) => {
 
 // Login
 client.login(DISCORD_TOKEN);
+
 
 
 
