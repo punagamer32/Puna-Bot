@@ -1,10 +1,10 @@
 {
-  "name": "Puna Bot",
+  "name": "punabot",
   "version": "1.0.0",
-  "description": "official Discord Bot For The Puna's Locker Room Discord Server",
   "main": "punabot.js",
-  "scripts": {
-    "start": "node punabot.js"
-  },
-  "dependencies": {}
+  "scripts": { "start": "node punabot.js" },
+  "dependencies": {
+    "discord.js": "^14.0.0",
+    "node-fetch": "^3.0.0"
+  }
 }
