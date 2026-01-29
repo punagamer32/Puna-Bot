@@ -125,7 +125,7 @@ const HYPIXEL_KEY = process.env.HYPIXEL_KEY;
 let activeGames = {};
 
 // Ready event
-client.once('ready', () => {
+client.once('clientReady', () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 
   // Set bot presence
@@ -229,6 +229,7 @@ app.listen(PORT, () => console.log(`Health check server on ${PORT}`));
 
 // Login
 client.login(DISCORD_TOKEN);
+
 
 
 
