@@ -1,6 +1,7 @@
 // punabot.js
-import { Client, GatewayIntentBits } from 'discord.js';
+import { Client, GatewayIntentBits, ActivityType } from 'discord.js';
 import fetch from 'node-fetch';
+import express from 'express';
 
 // Create client
 const client = new Client({
@@ -11,21 +12,20 @@ const client = new Client({
   ]
 });
 
-// Environment variables (set these in Katabump dashboard)
-const DISCORD_TOKEN = process.env.DISCORD_TOKEN
-const HYPIXEL_KEY = process.env.HYPIXEL_KEY
+// Environment variables
+const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
+const HYPIXEL_KEY = process.env.HYPIXEL_KEY;
 
 // Store active RPS games
 let activeGames = {};
 
 // Ready event
 client.once('ready', () => {
-client.once('clientReady', () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 
   // Set bot presence
   client.user.setPresence({
-    activities: [{ name: '@punagamer32 On YouTube', type: WATCHING }], // Playing Bedwars
+    activities: [{ name: '@punagamer32 On YouTube', type: ActivityType.Watching }],
     status: 'online'
   });
 });
@@ -38,9 +38,11 @@ client.on('messageCreate', async (message) => {
   if (message.content === '!ping') {
     return message.reply('Pong, I am here!');
   }
+
   if (message.content === '!echo') {
     return message.reply('Echo Goes Through Yours Ears!');
   }
+
   // --- Bedwars stats ---
   if (message.content.startsWith('!bedwars')) {
     const username = message.content.split(' ')[1];
@@ -109,5 +111,11 @@ client.on('messageCreate', async (message) => {
   }
 });
 
-// Login
+// --- Health check server for Koyeb ---
+const app = express();
+const PORT = process.env.PORT || 8000;
+app.get('/', (req, res) => res.send('Bot is running ✅'));
+app.listen(PORT, () => console.log(`Health check server on ${PORT}`));
 
+// Login
+client.login(DISCORD_TOKEN);
