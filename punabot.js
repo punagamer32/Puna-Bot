@@ -153,6 +153,30 @@ if (message.content === '!joke') {
   const joke = jokes[randomIndex];
   return message.reply(joke);
  }
+// --- Minecraft Alt Checker ---
+if (message.content.startsWith('!altchecker')) {
+  const username = message.content.split(' ')[1];
+  if (!username) return message.reply('Please provide a Minecraft username!');
+
+  try {
+    const res = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
+    
+    if (res.status === 204) {
+      // Mojang returns 204 No Content if the account doesn’t exist
+      return message.reply(`❌ The username **${username}** is not a valid Mojang account (likely an alt).`);
+    }
+
+    const data = await res.json();
+    if (data && data.id) {
+      return message.reply(`✅ The username **${username}** is a valid Mojang account.`);
+    } else {
+      return message.reply(`❌ The username **${username}** is not valid (likely an alt).`);
+    }
+  } catch (err) {
+    console.error(err);
+    message.reply('⚠️ Error checking account. Try again later.');
+  }
+}
   // --- Bedwars stats ---
   if (message.content.startsWith('!bedwars')) {
     const username = message.content.split(' ')[1];
@@ -229,6 +253,7 @@ app.listen(PORT, () => console.log(`Health check server on ${PORT}`));
 
 // Login
 client.login(DISCORD_TOKEN);
+
 
 
 
