@@ -137,6 +137,7 @@ client.once('clientReady', () => {
 
 // Message handler
 client.on('messageCreate', async (message) => {
+  console.log(`[${message.author.tag}] ${message.content}`);
   if (message.author.bot) return;
 
   // --- Message Commands ---
@@ -253,6 +254,7 @@ app.listen(PORT, () => console.log(`Health check server on ${PORT}`));
 
 // Login
 client.login(DISCORD_TOKEN);
+
 
 
 
