@@ -25,7 +25,7 @@ client.once('clientReady', () => {
 
   // Set bot presence
   client.user.setPresence({
-    activities: [{ name: 'Sub To punagamer32 On YouTube', type: 0 }], // Playing Bedwars
+    activities: [{ name: '@punagamer32 On YouTube', type: WATCHING }], // Playing Bedwars
     status: 'online'
   });
 });
@@ -110,3 +110,4 @@ client.on('messageCreate', async (message) => {
 });
 
 // Login
+
