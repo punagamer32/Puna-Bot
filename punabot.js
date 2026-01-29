@@ -152,11 +152,7 @@ if (message.content === '!joke') {
   const randomIndex = Math.floor(Math.random() * jokes.length);
   const joke = jokes[randomIndex];
   return message.reply(joke);
-}
-      
-    let random = Math.floor(Math.random() * replies.length);
-  }
-
+ }
   // --- Bedwars stats ---
   if (message.content.startsWith('!bedwars')) {
     const username = message.content.split(' ')[1];
@@ -233,5 +229,6 @@ app.listen(PORT, () => console.log(`Health check server on ${PORT}`));
 
 // Login
 client.login(DISCORD_TOKEN);
+
 
 
