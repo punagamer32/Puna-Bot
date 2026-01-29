@@ -78,8 +78,11 @@ const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
   try {
     console.log('Registering slash commands...');
     await rest.put(
-      Routes.applicationCommands(CLIENT_ID),
-      { body: commands },
+      Routes.applicationGuildCommands(
+      process.env.CLIENT_ID, // your bot’s application ID
+      process.env.GUILD_ID // the server ID where you want commands 
+      ),
+      { body: commands }, );
     );
     console.log('✅ Slash commands registered!');
   } catch (error) {
@@ -172,5 +175,6 @@ client.on('interactionCreate', async (interaction) => {
 
 // Login
 client.login(DISCORD_TOKEN);
+
 
 
