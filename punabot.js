@@ -161,7 +161,24 @@ client.on('messageCreate', async (message) => {
   }
 
   if (message.content.startsWith('!bedwars')) {
-    // … your bedwars logic …
+     if (message.content.startsWith('!bedwars')) {
+    const username = message.content.split(' ')[1];
+    if (!username) return message.reply('Please provide a username!');
+    try {
+      const mojangRes = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
+      const mojangData = await mojangRes.json();
+      const uuid = mojangData.id;
+      const hypixelRes = await fetch(`https://api.hypixel.net/player?key=${HYPIXEL_KEY}&uuid=${uuid}`);
+      const hypixelData = await hypixelRes.json();
+      if (!hypixelData.player) return message.reply('Player not found!');
+      const bedwars = hypixelData.player.stats.Bedwars;
+      return message.reply(`🏰 Bedwars stats for **${username}**:\nWins: ${bedwars.wins_bedwars}\nLosses: ${bedwars.losses_bedwars}\nKills: ${bedwars.kills_bedwars}\nDeaths: ${bedwars.deaths_bedwars}`);
+    } catch (err) {
+      console.error(err);
+      return message.reply('Error fetching stats.');
+    }
+  }
+
   }
 
   if (message.content.startsWith('!rps')) {
@@ -193,4 +210,5 @@ client.on('messageCreate', async (message) => {
 
 // Login
 client.login(DISCORD_TOKEN);
+
 
