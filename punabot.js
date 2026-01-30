@@ -2,6 +2,9 @@
 import { Client, GatewayIntentBits, ActivityType } from 'discord.js';
 import fetch from 'node-fetch';
 import express from 'express';
+import os from 'os';
+
+// Jokes
 const jokes = [
   "Why don’t scientists trust atoms? Because they make up everything.",
   "Why did the scarecrow win an award? Because he was outstanding in his field.",
@@ -107,6 +110,28 @@ const jokes = [
   "Parallel lines have so much in common… it’s a shame they’ll never meet.",
   "I asked my dog what's two minus two. He said nothing."
 ];
+
+// Get ip
+import express from 'express';
+import os from 'os';
+
+const app = express();
+const PORT = process.env.PORT || 8000;
+
+app.get('/', (req, res) => res.send('Bot is running ✅'));
+
+app.listen(PORT, () => {
+  // Get all network interfaces
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      // Skip internal (127.0.0.1) and non-IPv4
+      if (iface.family === 'IPv4' && !iface.internal) {
+        console.log(`Server running at http://${iface.address}:${PORT}`);
+      }
+    }
+  }
+});
 
 // Create client
 const client = new Client({
@@ -254,9 +279,3 @@ app.listen(PORT, () => console.log(`Health check server on ${PORT}`));
 
 // Login
 client.login(DISCORD_TOKEN);
-
-
-
-
-
-
