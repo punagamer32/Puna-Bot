@@ -5,7 +5,7 @@ import express from 'express';
 import os from 'os';
 
 // Jokes
-const jokes = fetch('jokes.json')
+const jokes = fetch('jokes.json');
 
 // --- Health check server ---
 const app = express();
@@ -115,6 +115,7 @@ client.on('messageCreate', async (message) => {
 
 // Login
 client.login(DISCORD_TOKEN);
+
 
 
 
