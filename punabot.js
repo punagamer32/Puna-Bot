@@ -137,8 +137,8 @@ client.once('clientReady', () => {
 
 // Unified message handler
 client.on('messageCreate', async (message) => {
+  console.log(`[${message.author.tag}] (${message.channel.type}) ${message.content}`);
   if (message.author.bot) return;
-
   if (message.content === '!ping') return message.reply('Pong!');
   if (message.content === '!echo') return message.reply('Echo Goes Through Your Ears!');
   if (message.content === '!joke') {
@@ -193,3 +193,4 @@ client.on('messageCreate', async (message) => {
 
 // Login
 client.login(DISCORD_TOKEN);
+
