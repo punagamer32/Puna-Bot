@@ -202,7 +202,16 @@ client.on('messageCreate', async (message) => {
     const game = activeGames[challenger];
     game.choices[message.author.id] = message.content.toLowerCase();
     if (Object.keys(game.choices).length === 2) {
-      // … compare choices and send result …
+      const [p1, p2] = [game.choices[challenger], game.choices[game.opponent]];
+      let result;
+      if (p1 === p2) result = 'It’s a tie!';
+      else if ((p1 === 'rock' && p2 === 'scissors') ||
+               (p1 === 'scissors' && p2 === 'paper') ||
+               (p1 === 'paper' && p2 === 'rock')) result = `<@${challenger}> wins!`;
+      else result = `<@${game.opponent}> wins!`;
+      message.client.channels.cache
+        .find(c => c.type === 0 && c.members.has(challenger))
+        ?.send(`🪨✂️📄 Results:\n<@${challenger}> chose **${p1}**\n<@${game.opponent}> chose **${p2}**\n${result}`);
       delete activeGames[challenger];
     }
   }
@@ -210,5 +219,6 @@ client.on('messageCreate', async (message) => {
 
 // Login
 client.login(DISCORD_TOKEN);
+
 
 
