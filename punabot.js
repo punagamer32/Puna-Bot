@@ -232,42 +232,55 @@ if (message.content.startsWith('!altchecker')) {
     }
   }
 
-  // --- Rock Paper Scissors ---
+client.on('messageCreate', async (message) => {
+  if (message.author.bot) return;
+
+  // --- Challenge ---
   if (message.content.startsWith('!rps')) {
     const opponent = message.mentions.users.first();
     if (!opponent) return message.reply('You need to mention someone to challenge!');
 
     activeGames[message.author.id] = { opponent: opponent.id, choices: {} };
-    message.channel.send(`${opponent}, you’ve been challenged to Rock‑Paper‑Scissors! Type \`!accept\`.`);
+    return message.channel.send(`${opponent}, you’ve been challenged to Rock‑Paper‑Scissors! Type \`!accept\`.`);
   }
 
+  // --- Accept ---
   if (message.content === '!accept') {
     const challenger = Object.keys(activeGames).find(id => activeGames[id].opponent === message.author.id);
     if (!challenger) return;
 
+    return message.channel.send(`Game started! Both players DM me with \`rock\`, \`paper\`, or \`scissors\`.`);
+  }
+
+  // --- Handle DM choices ---
+  if (message.channel.type === 1) { // type 1 = DM
+    const challenger = Object.keys(activeGames).find(id =>
+      [id, activeGames[id].opponent].includes(message.author.id)
+    );
+    if (!challenger) return;
+
     const game = activeGames[challenger];
-    message.channel.send(`Game started! Both players DM me with \`rock\`, \`paper\`, or \`scissors\`.`);
+    game.choices[message.author.id] = message.content.toLowerCase();
 
-    client.on('messageCreate', (dmMsg) => {
-      if (dmMsg.channel.type !== 1) return; // Only DMs
-      if (![challenger, game.opponent].includes(dmMsg.author.id)) return;
-
-      game.choices[dmMsg.author.id] = dmMsg.content.toLowerCase();
-      if (Object.keys(game.choices).length === 2) {
-        const [p1, p2] = [game.choices[challenger], game.choices[game.opponent]];
-        let result;
-        if (p1 === p2) result = 'It’s a tie!';
-        else if ((p1 === 'rock' && p2 === 'scissors') ||
-                 (p1 === 'scissors' && p2 === 'paper') ||
-                 (p1 === 'paper' && p2 === 'rock')) {
-          result = `<@${challenger}> wins!`;
-        } else {
-          result = `<@${game.opponent}> wins!`;
-        }
-        message.channel.send(`🪨✂️📄 Results:\n<@${challenger}> chose **${p1}**\n<@${game.opponent}> chose **${p2}**\n${result}`);
-        delete activeGames[challenger];
+    if (Object.keys(game.choices).length === 2) {
+      const [p1, p2] = [game.choices[challenger], game.choices[game.opponent]];
+      let result;
+      if (p1 === p2) result = 'It’s a tie!';
+      else if ((p1 === 'rock' && p2 === 'scissors') ||
+               (p1 === 'scissors' && p2 === 'paper') ||
+               (p1 === 'paper' && p2 === 'rock')) {
+        result = `<@${challenger}> wins!`;
+      } else {
+        result = `<@${game.opponent}> wins!`;
       }
-    });
+
+      // Send results back to the original channel
+      message.client.channels.cache
+        .get(message.channel.id) // replace with a fixed channel ID if you want
+        .send(`🪨✂️📄 Results:\n<@${challenger}> chose **${p1}**\n<@${game.opponent}> chose **${p2}**\n${result}`);
+
+      delete activeGames[challenger];
+    }
   }
 });
 
@@ -279,3 +292,4 @@ app.listen(PORT, () => console.log(`Health check server on ${PORT}`));
 
 // Login
 client.login(DISCORD_TOKEN);
+
