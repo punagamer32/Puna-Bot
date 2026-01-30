@@ -112,9 +112,6 @@ const jokes = [
 ];
 
 // Get ip
-import express from 'express';
-import os from 'os';
-
 const app = express();
 const PORT = process.env.PORT || 8000;
 
@@ -301,5 +298,6 @@ app.listen(PORT, () => console.log(`Health check server on ${PORT}`));
 
 // Login
 client.login(DISCORD_TOKEN);
+
 
 
