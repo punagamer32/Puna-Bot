@@ -133,6 +133,15 @@ app.listen(PORT, () => {
   }
 });
 
+setInterval(async () => {
+  try {
+    const res = await fetch('https://your-app-name.koyeb.app');
+    console.log('Pinged Koyeb:', res.status);
+  } catch (err) {
+    console.error('Ping failed:', err);
+  }
+}, 300000); // every 5 minutes
+
 // Create client
 const client = new Client({
   intents: [
@@ -292,4 +301,5 @@ app.listen(PORT, () => console.log(`Health check server on ${PORT}`));
 
 // Login
 client.login(DISCORD_TOKEN);
+
 
