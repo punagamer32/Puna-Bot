@@ -5,7 +5,7 @@ import express from 'express';
 import os from 'os';
 
 // Jokes
-const jokes = process.json.jokes;
+import jokes from './jokes.json' assert { type: 'json' };
 
 // --- Health check server ---
 const app = express();
@@ -37,10 +37,11 @@ client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
   if (message.content === '!ping') return message.reply('Pong!');
   if (message.content === '!echo') return message.reply('Echo Goes Through Your Ears!');
-  if (message.content === '!joke') {
-    const joke = jokes[Math.floor(Math.random() * jokes.length)];
-    return message.reply(joke);
-  }
+if (message.content === '!joke') {
+  const randomIndex = Math.floor(Math.random() * jokes.length);
+  const joke = jokes[randomIndex];
+  return message.reply(joke);
+}
 
   if (message.content.startsWith('!altchecker')) {
     const username = message.content.split(' ')[1];
@@ -125,5 +126,6 @@ setInterval(async () => {
 
 // Login
 client.login(DISCORD_TOKEN);
+
 
 
