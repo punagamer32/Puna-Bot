@@ -35,8 +35,8 @@ client.once('clientReady', () => {
 client.on('messageCreate', async (message) => {
   console.log(`[${message.author.tag}] (${message.channel.type}) ${message.content}`);
   if (message.author.bot) return;
-  if (message.content === '!ping') return message.reply('Pong!');
-  if (message.content === '!echo') return message.reply('Echo Goes Through Your Ears!');
+  if (message.content === '!ping') return message.reply('Pong! I am here!');
+  if (message.content === '!echo') return message.reply('Echo rips through your ears!');
   if (message.content === '!joke') {
     const randomIndex = Math.floor(Math.random() * jokes.length);
     const joke = jokes[randomIndex];
@@ -82,7 +82,7 @@ client.on('messageCreate', async (message) => {
     const opponent = message.mentions.users.first();
     if (!opponent) return message.reply('Mention someone to challenge!');
     activeGames[message.author.id] = { opponent: opponent.id, choices: {} };
-    return message.channel.send(`${opponent}, type !accept to play RPS.`);
+    return message.channel.send(`${opponent}, type `!accept` to play Rock, Paper Scissors!`);
   }
 
   if (message.content === '!accept') {
@@ -126,6 +126,7 @@ setInterval(async () => {
 
 // Login
 client.login(DISCORD_TOKEN);
+
 
 
 
