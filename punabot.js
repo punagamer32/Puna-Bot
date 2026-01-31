@@ -5,7 +5,7 @@ import express from 'express';
 import os from 'os';
 
 // Jokes
-const jokes = import('jokes.json');
+const jokes = process.json.jokes;
 
 // --- Health check server ---
 const app = express();
@@ -125,4 +125,5 @@ setInterval(async () => {
 
 // Login
 client.login(DISCORD_TOKEN);
+
 
