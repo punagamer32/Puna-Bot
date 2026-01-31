@@ -113,9 +113,6 @@ client.on('messageCreate', async (message) => {
   }
 });
 
-//Koyeb Ping
-import fetch from 'node-fetch';
-
 setInterval(async () => {
   try {
     const res = await fetch('https://puna-bot.koyeb.app/');
@@ -128,4 +125,3 @@ setInterval(async () => {
 
 // Login
 client.login(DISCORD_TOKEN);
-
