@@ -3,6 +3,10 @@ import { Client, GatewayIntentBits, ActivityType, ActionRowBuilder, ButtonBuilde
 import fetch from 'node-fetch';
 import express from 'express';
 import os from 'os';
+// --- Constants ---
+const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
+const HYPIXEL_KEY = process.env.HYPIXEL_KEY;
+const BOT_CHANNEL = process.env.BOT_CHANNEL;
 // --- Saved Data ---
 let scores = {}; // { userId: correctCount }
 let activeGames = {};
@@ -77,10 +81,6 @@ const app = express();
 const PORT = process.env.PORT || 8000;
 app.get('/', (req, res) => res.send('Bot is running ✅'));
 app.listen(PORT, () => console.log(`Health check server on ${PORT}`));
-// --- Constants ---
-const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
-const HYPIXEL_KEY = process.env.HYPIXEL_KEY;
-const BOT_CHANNEL = process.env.BOT_CHANNEL;
 // --- Ready ---
 client.once('clientReady', () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
@@ -183,4 +183,5 @@ setInterval(async () => {
 }, 150000); // every 2.5 minutes
 // --- Login ---
 client.login(DISCORD_TOKEN);
+
 
