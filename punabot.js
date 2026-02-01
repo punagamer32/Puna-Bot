@@ -168,6 +168,10 @@ client.on('messageCreate', async (message) => {
     if (!challenger) return;
     return message.channel.send(`Game started! Both players DM me with rock/paper/scissors.`);
   }
+  catch (err) {
+      console.error(err);
+      return message.reply('⚠️ Could not find game.');
+  }
 
   if (message.channel.type === 1) { // DM
     const challenger = Object.keys(activeGames).find(id =>
@@ -203,6 +207,7 @@ setInterval(async () => {
 
 // Login
 client.login(DISCORD_TOKEN);
+
 
 
 
