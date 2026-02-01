@@ -128,7 +128,9 @@ if (message.content.startsWith('!bedwars')) {
     const hypixelData = await hypixelRes.json();
     if (!hypixelData.player) return message.reply('Player not found!');
     const bedwars = hypixelData.player.stats.Bedwars;
-    return message.reply(`🏰 Bedwars stats for **${username}**:\nWins: ${bedwars.wins_bedwars}\nLosses: ${bedwars.losses_bedwars}\nKills: ${bedwars.kills_bedwars}\nDeaths: ${bedwars.deaths_bedwars}`);
+    return message.reply(
+      `🏰 Bedwars stats for **${username}**:\nWins: ${bedwars.wins_bedwars}\nLosses: ${bedwars.losses_bedwars}\nKills: ${bedwars.kills_bedwars}\nDeaths: ${bedwars.deaths_bedwars}`
+    );
   } catch (err) {
     console.error(err);
     return message.reply('⚠️ Error fetching stats.');
@@ -181,3 +183,4 @@ setInterval(async () => {
 }, 150000); // every 2.5 minutes
 // --- Login ---
 client.login(DISCORD_TOKEN);
+
