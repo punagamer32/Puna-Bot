@@ -1,35 +1,31 @@
-// punabot.js
+// --- punabot.js ---
 import { Client, GatewayIntentBits, ActivityType, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle  } from 'discord.js';
 import fetch from 'node-fetch';
 import express from 'express';
 import os from 'os';
-
+// --- Saved Data ---
+let scores = {}; // { userId: correctCount }
+let activeGames = {};
 // --- Discord client ---
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
 });
-
-//trivia
-import triviaData from './trivia.json' assert { type: 'json' };
+//--- Trivia ---
+import triviaData from './trivia.json' with { type: 'json' };
 let currentTrivia = null;
 let triviaActive = false;
 let triviaTimeout = null;
-let scores = {}; // { userId: correctCount }
 function startTriviaRound(channel) {
   if (triviaActive) return;
   const randomIndex = Math.floor(Math.random() * triviaData.length);
   currentTrivia = triviaData[randomIndex];
   triviaActive = true;
-
   const button = new ButtonBuilder()
     .setCustomId('triviaAnswer')
     .setLabel('Answer Trivia')
     .setStyle(ButtonStyle.Primary);
-
   const row = new ActionRowBuilder().addComponents(button);
-
   channel.send({ content: `🧠 Trivia Time!\n${currentTrivia.question}`, components: [row] });
-
   triviaTimeout = setTimeout(() => {
     triviaActive = false;
     currentTrivia = null;
@@ -41,7 +37,6 @@ client.on('interactionCreate', async (interaction) => {
     if (!triviaActive || !currentTrivia) {
       return interaction.reply({ content: 'No active trivia round!', ephemeral: true });
     }
-
     const modal = new ModalBuilder()
       .setCustomId('triviaModal')
       .setTitle('Trivia Answer')
@@ -53,17 +48,13 @@ client.on('interactionCreate', async (interaction) => {
             .setStyle(TextInputStyle.Short)
         )
       );
-
     await interaction.showModal(modal);
   }
-
   if (interaction.isModalSubmit() && interaction.customId === 'triviaModal') {
     const guess = interaction.fields.getTextInputValue('answerField').trim();
-
     if (!triviaActive || !currentTrivia) {
       return interaction.reply({ content: 'No active trivia round!', ephemeral: true });
     }
-
     if (guess.toLowerCase() === currentTrivia.answer.toLowerCase()) {
       triviaActive = false;
       clearTimeout(triviaTimeout);
@@ -75,28 +66,22 @@ client.on('interactionCreate', async (interaction) => {
     }
   }
 });
-
-// Run every 30 minutes
 setInterval(() => {
-  const channel = client.channels.cache.get('BOT_CHANNEL');
+  const channel = client.channels.cache.get(BOT_CHANNEL);
   if (channel) startTriviaRound(channel);
 }, 30 * 60 * 1000);
-
 // Jokes
-import jokes from './jokes.json' assert { type: 'json' };
-
+import jokes from './jokes.json' with { type: 'json' };
 // --- Health check server ---
 const app = express();
 const PORT = process.env.PORT || 8000;
 app.get('/', (req, res) => res.send('Bot is running ✅'));
 app.listen(PORT, () => console.log(`Health check server on ${PORT}`));
-
+// --- Constants ---
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const HYPIXEL_KEY = process.env.HYPIXEL_KEY;
 const BOT_CHANNEL = process.env.BOT_CHANNEL;
-let activeGames = {};
-
-// Ready
+// --- Ready ---
 client.once('clientReady', () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
   client.user.setPresence({
@@ -104,8 +89,7 @@ client.once('clientReady', () => {
     status: 'online'
   });
 });
-
-// Unified message handler
+// --- Unified message handler ---
 client.on('messageCreate', async (message) => {
   console.log(`[${message.author.tag}] (${message.channel.type}) ${message.content}`);
   if (message.author.bot) return;
@@ -120,7 +104,6 @@ client.on('messageCreate', async (message) => {
     const score = scores[message.author.id] || 0;
     message.reply(`🏆 You have ${score} correct trivia answers!`);
   }
-
   if (message.content.startsWith('!altchecker')) {
     const username = message.content.split(' ')[1];
     if (!username) return message.reply('Please provide a username!');
@@ -134,28 +117,24 @@ client.on('messageCreate', async (message) => {
       return message.reply('⚠️ Error checking account.');
     }
   }
-
-  if (message.content.startsWith('!bedwars')) {
-     if (message.content.startsWith('!bedwars')) {
-    const username = message.content.split(' ')[1];
-    if (!username) return message.reply('Please provide a username!');
-    try {
-      const mojangRes = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
-      const mojangData = await mojangRes.json();
-      const uuid = mojangData.id;
-      const hypixelRes = await fetch(`https://api.hypixel.net/player?key=${HYPIXEL_KEY}&uuid=${uuid}`);
-      const hypixelData = await hypixelRes.json();
-      if (!hypixelData.player) return message.reply('Player not found!');
-      const bedwars = hypixelData.player.stats.Bedwars;
-      return message.reply(`🏰 Bedwars stats for **${username}**:\nWins: ${bedwars.wins_bedwars}\nLosses: ${bedwars.losses_bedwars}\nKills: ${bedwars.kills_bedwars}\nDeaths: ${bedwars.deaths_bedwars}`);
-    } catch (err) {
-      console.error(err);
-      return message.reply('⚠️ Error fetching stats.');
-    }
+if (message.content.startsWith('!bedwars')) {
+  const username = message.content.split(' ')[1];
+  if (!username) return message.reply('Please provide a username!');
+  try {
+    const mojangRes = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
+    const mojangData = await mojangRes.json();
+    const uuid = mojangData.id;
+    const hypixelRes = await fetch(`https://api.hypixel.net/player?key=${HYPIXEL_KEY}&uuid=${uuid}`);
+    const hypixelData = await hypixelRes.json();
+    if (!hypixelData.player) return message.reply('Player not found!');
+    const bedwars = hypixelData.player.stats.Bedwars;
+    return message.reply(`🏰 Bedwars stats for **${username}**:\nWins: ${bedwars.wins_bedwars}\nLosses: ${bedwars.losses_bedwars}\nKills: ${bedwars.kills_bedwars}\nDeaths: ${bedwars.deaths_bedwars}`);
+  } catch (err) {
+    console.error(err);
+    return message.reply('⚠️ Error fetching stats.');
   }
-
+}
   }
-
   if (message.content.startsWith('!rps')) {
     const opponent = message.mentions.users.first();
     if (!opponent) return message.reply('Mention someone to challenge!');
@@ -191,7 +170,7 @@ client.on('messageCreate', async (message) => {
     }
   }
 });
-
+// --- Koyeb Ping ---
 setInterval(async () => {
   try {
     const res = await fetch('https://puna-bot.koyeb.app/');
@@ -200,11 +179,5 @@ setInterval(async () => {
     console.error('Ping failed:', err);
   }
 }, 150000); // every 2.5 minutes
-
-// Login
+// --- Login ---
 client.login(DISCORD_TOKEN);
-
-
-
-
-
