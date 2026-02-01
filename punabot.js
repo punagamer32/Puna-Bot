@@ -117,27 +117,10 @@ client.on('messageCreate', async (message) => {
       return message.reply('⚠️ Error checking account.');
     }
   }
-  if (message.content.startsWith('!bedwars')) {
-    const username = message.content.split(' ')[1];
-    if (!username) return message.reply('Please provide a username!');
-    try {
-      const mojangRes = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
-      const mojangData = await mojangRes.json();
-      const uuid = mojangData.id;
-      const hypixelRes = await fetch(`https://api.hypixel.net/player?key=${HYPIXEL_KEY}&uuid=${uuid}`);
-      const hypixelData = await hypixelRes.json();
-      if (!hypixelData.player) return message.reply('Player not found!');
-      const bedwars = hypixelData.player.stats.Bedwars;
-      return message.reply(
-        `🏰 Bedwars stats for **${username}**:\nWins: ${bedwars.wins_bedwars}\nLosses: ${bedwars.losses_bedwars}\nKills: ${bedwars.kills_bedwars}\nDeaths: ${bedwars.deaths_bedwars}`
-      );
-    } catch (err) {
-      console.error(err);
-      return message.reply('⚠️ Error fetching stats.');
   if (message.content.startsWith('!partychecker')) {
-    const username = message.content.split(' ')[1];
-    if (!username) return message.reply('Please provide a username!');
-    try {
+  const username = message.content.split(' ')[1];
+  if (!username) return message.reply('Please provide a username!');
+  try {
     // Step 1: Get UUID from Mojang
     const mojangRes = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
     if (mojangRes.status === 204) return message.reply(`❌ ${username} is not valid.`);
@@ -147,11 +130,14 @@ client.on('messageCreate', async (message) => {
     const sessionRes = await fetch(`https://api.hypixel.net/session?key=${HYPIXEL_KEY}&uuid=${uuid}`);
     const sessionData = await sessionRes.json();
     if (!sessionData.session) {
-      return message.reply(`ℹ️ ${username} is not currently in a game or party.`);
+      return message.reply(`ℹ️ ${username} is not currently in a party or game.`);
     }
     const { gameType, players } = sessionData.session;
     // Step 3: Build response
-    let reply = `🎉 Party info for **${username}**:\nGame: ${gameType}\nPlayers in party: ${players.join(', ')}\nLeader: ${players[0]}`;
+    let reply = `🎉 Party info for **${username}**:\n`;
+    reply += `Game: ${gameType}\n`;
+    reply += `Players: ${players.join(', ')}\n`;
+    reply += `Leader: ${players[0]}`; // usually first in the list
     return message.reply(reply);
   } catch (err) {
     console.error(err);
@@ -204,5 +190,6 @@ setInterval(async () => {
 }, 150000); // every 2.5 minutes
 // --- Login ---
 client.login(DISCORD_TOKEN);
+
 
 
