@@ -194,7 +194,6 @@ client.on('messageCreate', async (message) => {
       delete activeGames[challenger];
     }
   }
-});
 
 setInterval(async () => {
   try {
@@ -208,6 +207,7 @@ setInterval(async () => {
 
 // Login
 client.login(DISCORD_TOKEN);
+
 
 
 
