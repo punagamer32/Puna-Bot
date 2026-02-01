@@ -145,7 +145,6 @@ client.on('messageCreate', async (message) => {
   }
 }
   }
-}
   if (message.content.startsWith('!rps')) {
     const opponent = message.mentions.users.first();
     if (!opponent) return message.reply('Mention someone to challenge!');
@@ -190,6 +189,7 @@ setInterval(async () => {
 }, 150000); // every 2.5 minutes
 // --- Login ---
 client.login(DISCORD_TOKEN);
+
 
 
 
