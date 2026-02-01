@@ -194,7 +194,7 @@ client.on('messageCreate', async (message) => {
       delete activeGames[challenger];
     }
   }
-};
+});
 
 setInterval(async () => {
   try {
