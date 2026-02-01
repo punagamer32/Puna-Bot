@@ -78,7 +78,7 @@ client.on('interactionCreate', async (interaction) => {
 
 // Run every 30 minutes
 setInterval(() => {
-  const channel = client.channels.cache.get('YOUR_CHANNEL_ID');
+  const channel = client.channels.cache.get('BOT_CHANNEL');
   if (channel) startTriviaRound(channel);
 }, 30 * 60 * 1000);
 
@@ -93,6 +93,7 @@ app.listen(PORT, () => console.log(`Health check server on ${PORT}`));
 
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const HYPIXEL_KEY = process.env.HYPIXEL_KEY;
+const BOT_CHANNEL = process.env.BOT_CHANNEL;
 let activeGames = {};
 
 // Ready
@@ -202,5 +203,6 @@ setInterval(async () => {
 
 // Login
 client.login(DISCORD_TOKEN);
+
 
 
