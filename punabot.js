@@ -4,6 +4,11 @@ import fetch from 'node-fetch';
 import express from 'express';
 import os from 'os';
 
+// --- Discord client ---
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
+});
+
 //trivia
 import triviaData from './trivia.json' assert { type: 'json' };
 let currentTrivia = null;
@@ -85,11 +90,6 @@ const app = express();
 const PORT = process.env.PORT || 8000;
 app.get('/', (req, res) => res.send('Bot is running ✅'));
 app.listen(PORT, () => console.log(`Health check server on ${PORT}`));
-
-// --- Discord client ---
-const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
-});
 
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const HYPIXEL_KEY = process.env.HYPIXEL_KEY;
@@ -202,4 +202,5 @@ setInterval(async () => {
 
 // Login
 client.login(DISCORD_TOKEN);
+
 
