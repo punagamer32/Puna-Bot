@@ -194,6 +194,7 @@ client.on('messageCreate', async (message) => {
       delete activeGames[challenger];
     }
   }
+});
 
 setInterval(async () => {
   try {
@@ -204,14 +205,5 @@ setInterval(async () => {
   }
 }, 150000); // every 2.5 minutes
 
-
 // Login
 client.login(DISCORD_TOKEN);
-
-
-
-
-
-
-
-
