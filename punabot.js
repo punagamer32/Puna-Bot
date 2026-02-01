@@ -74,7 +74,7 @@ setInterval(() => {
   const channel = client.channels.cache.get(BOT_CHANNEL);
   if (channel) startTriviaRound(channel);
 }, 30 * 60 * 1000);
-// Jokes
+// --- Jokes ---
 import jokes from './jokes.json' with { type: 'json' };
 // --- Health check server ---
 const app = express();
@@ -134,6 +134,30 @@ if (message.content.startsWith('!bedwars')) {
   } catch (err) {
     console.error(err);
     return message.reply('⚠️ Error fetching stats.');
+if (message.content.startsWith('!partychecker')) {
+  const username = message.content.split(' ')[1];
+  if (!username) return message.reply('Please provide a username!');
+  try {
+    // Step 1: Get UUID from Mojang
+    const mojangRes = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
+    if (mojangRes.status === 204) return message.reply(`❌ ${username} is not valid.`);
+    const mojangData = await mojangRes.json();
+    const uuid = mojangData.id;
+    // Step 2: Get Hypixel session info
+    const sessionRes = await fetch(`https://api.hypixel.net/session?key=${HYPIXEL_KEY}&uuid=${uuid}`);
+    const sessionData = await sessionRes.json();
+    if (!sessionData.session) {
+      return message.reply(`ℹ️ ${username} is not currently in a game or party.`);
+    }
+    const { gameType, players } = sessionData.session;
+    // Step 3: Build response
+    let reply = `🎉 Party info for **${username}**:\nGame: ${gameType}\nPlayers in party: ${players.join(', ')}\nLeader: ${players[0]}`;
+    return message.reply(reply);
+  } catch (err) {
+    console.error(err);
+    return message.reply('⚠️ Error fetching party info.');
+  }
+}
   }
 }
   if (message.content.startsWith('!rps')) {
@@ -142,13 +166,11 @@ if (message.content.startsWith('!bedwars')) {
     activeGames[message.author.id] = { opponent: opponent.id, choices: {} };
     return message.channel.send(`${opponent}, type **!accept** to play Rock, Paper Scissors!`);
   }
-
   if (message.content === '!accept') {
     const challenger = Object.keys(activeGames).find(id => activeGames[id].opponent === message.author.id);
     if (!challenger) return;
     return message.channel.send(`Game started! Both players DM me with rock/paper/scissors.`);
   }
-
   if (message.channel.type === 1) { // DM
     const challenger = Object.keys(activeGames).find(id =>
       [id, activeGames[id].opponent].includes(message.author.id)
@@ -182,3 +204,4 @@ setInterval(async () => {
 }, 150000); // every 2.5 minutes
 // --- Login ---
 client.login(DISCORD_TOKEN);
+
