@@ -1,8 +1,87 @@
 // punabot.js
-import { Client, GatewayIntentBits, ActivityType } from 'discord.js';
+import { Client, GatewayIntentBits, ActivityType, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle  } from 'discord.js';
 import fetch from 'node-fetch';
 import express from 'express';
 import os from 'os';
+
+//trivia
+import triviaData from './trivia.json' assert { type: 'json' };
+let currentTrivia = null;
+let triviaActive = false;
+let triviaTimeout = null;
+let scores = {}; // { userId: correctCount }
+function startTriviaRound(channel) {
+  if (triviaActive) return;
+  const randomIndex = Math.floor(Math.random() * triviaData.length);
+  currentTrivia = triviaData[randomIndex];
+  triviaActive = true;
+
+  const button = new ButtonBuilder()
+    .setCustomId('triviaAnswer')
+    .setLabel('Answer Trivia')
+    .setStyle(ButtonStyle.Primary);
+
+  const row = new ActionRowBuilder().addComponents(button);
+
+  channel.send({ content: `🧠 Trivia Time!\n${currentTrivia.question}`, components: [row] });
+
+  triviaTimeout = setTimeout(() => {
+    triviaActive = false;
+    currentTrivia = null;
+    channel.send('⏰ Trivia round ended. No one got it in time!');
+  }, 5 * 60 * 1000); // 5 minutes
+}
+client.on('interactionCreate', async (interaction) => {
+  if (interaction.isButton() && interaction.customId === 'triviaAnswer') {
+    if (!triviaActive || !currentTrivia) {
+      return interaction.reply({ content: 'No active trivia round!', ephemeral: true });
+    }
+
+    const modal = new ModalBuilder()
+      .setCustomId('triviaModal')
+      .setTitle('Trivia Answer')
+      .addComponents(
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId('answerField')
+            .setLabel('Your Answer')
+            .setStyle(TextInputStyle.Short)
+        )
+      );
+
+    await interaction.showModal(modal);
+  }
+
+  if (interaction.isModalSubmit() && interaction.customId === 'triviaModal') {
+    const guess = interaction.fields.getTextInputValue('answerField').trim();
+
+    if (!triviaActive || !currentTrivia) {
+      return interaction.reply({ content: 'No active trivia round!', ephemeral: true });
+    }
+
+    if (guess.toLowerCase() === currentTrivia.answer.toLowerCase()) {
+      triviaActive = false;
+      clearTimeout(triviaTimeout);
+      scores[interaction.user.id] = (scores[interaction.user.id] || 0) + 1;
+      currentTrivia = null;
+      return interaction.reply(`🎉 ${interaction.user} answered correctly!`);
+    } else {
+      return interaction.reply({ content: '❌ Incorrect guess, try again!', ephemeral: true });
+    }
+  }
+});
+client.on('messageCreate', (message) => {
+  if (message.content === '!trivia') {
+    const score = scores[message.author.id] || 0;
+    message.reply(`🏆 You have ${score} correct trivia answers!`);
+  }
+});
+
+// Run every 30 minutes
+setInterval(() => {
+  const channel = client.channels.cache.get('YOUR_CHANNEL_ID');
+  if (channel) startTriviaRound(channel);
+}, 30 * 60 * 1000);
 
 // Jokes
 import jokes from './jokes.json' assert { type: 'json' };
@@ -126,6 +205,7 @@ setInterval(async () => {
 
 // Login
 client.login(DISCORD_TOKEN);
+
 
 
 
