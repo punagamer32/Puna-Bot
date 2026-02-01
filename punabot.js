@@ -150,7 +150,7 @@ client.on('messageCreate', async (message) => {
       return message.reply(`🏰 Bedwars stats for **${username}**:\nWins: ${bedwars.wins_bedwars}\nLosses: ${bedwars.losses_bedwars}\nKills: ${bedwars.kills_bedwars}\nDeaths: ${bedwars.deaths_bedwars}`);
     } catch (err) {
       console.error(err);
-      return message.reply('Error fetching stats.');
+      return message.reply('⚠️ Error fetching stats.');
     }
   }
 
@@ -167,10 +167,6 @@ client.on('messageCreate', async (message) => {
     const challenger = Object.keys(activeGames).find(id => activeGames[id].opponent === message.author.id);
     if (!challenger) return;
     return message.channel.send(`Game started! Both players DM me with rock/paper/scissors.`);
-  }
-  catch (err) {
-      console.error(err);
-      return message.reply('⚠️ Could not find game.');
   }
 
   if (message.channel.type === 1) { // DM
@@ -207,6 +203,7 @@ setInterval(async () => {
 
 // Login
 client.login(DISCORD_TOKEN);
+
 
 
 
