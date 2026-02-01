@@ -120,6 +120,9 @@ client.on('messageCreate', async (message) => {
     const randomIndex = Math.floor(Math.random() * jokes.length);
     const joke = jokes[randomIndex];
     return message.reply(joke);
+  if (message.content === '!trivia') {
+    const score = scores[message.author.id] || 0;
+    message.reply(`🏆 You have ${score} correct trivia answers!`);
   }
 
   if (message.content.startsWith('!altchecker')) {
@@ -161,7 +164,7 @@ client.on('messageCreate', async (message) => {
     const opponent = message.mentions.users.first();
     if (!opponent) return message.reply('Mention someone to challenge!');
     activeGames[message.author.id] = { opponent: opponent.id, choices: {} };
-    return message.channel.send(`${opponent}, type `!accept` to play Rock, Paper Scissors!`);
+    return message.channel.send(`${opponent}, type !accept to play Rock, Paper Scissors!`);
   }
 
   if (message.content === '!accept') {
@@ -205,6 +208,7 @@ setInterval(async () => {
 
 // Login
 client.login(DISCORD_TOKEN);
+
 
 
 
