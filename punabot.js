@@ -199,12 +199,13 @@ client.on('messageCreate', async (message) => {
 // --- Koyeb Ping ---
 setInterval(async () => {
   try {
-    const res = await fetch('https://puna-bot.koyeb.app/');
-    console.log('Pinged Koyeb:', res.status);
+    const res = await fetch('https://puna-bot-v1ar.onrender.com/');
+    console.log('Pinged Render:', res.status);
   } catch (err) {
     console.error('Ping failed:', err);
   }
 }, 150000); // every 2.5 minutes
 // --- Login ---
 client.login(DISCORD_TOKEN);
+
 
