@@ -82,7 +82,7 @@ const PORT = process.env.PORT || 8000;
 app.get('/', (req, res) => res.send('Bot is running ✅'));
 app.listen(PORT, () => console.log(`Health check server on ${PORT}`));
 // --- Ready ---
-client.once('clientReady', () => {
+client.once('ready', () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
   client.user.setPresence({
     activities: [{ name: '@punagamer32 On YouTube', type: ActivityType.Watching }],
@@ -221,4 +221,5 @@ process.on('SIGTERM', () => {
   console.log("⚠️ Received SIGTERM, shutting down...");
   client.destroy();
 });
+
 
