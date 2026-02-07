@@ -206,6 +206,18 @@ setInterval(async () => {
   }
 }, 150000); // every 2.5 minutes
 // --- Login ---
-client.login(DISCORD_TOKEN);
-
-
+async function startBot() {
+  try {
+    await client.login(process.env.DISCORD_TOKEN);
+    console.log("✅ Bot logged in");
+  } catch (err) {
+    console.error("❌ Login failed, retrying in 10s:", err);
+    setTimeout(startBot, 10000);
+  }
+}
+startBot();
+// --- Shutdown Handling ---
+process.on('SIGTERM', () => {
+  console.log("⚠️ Received SIGTERM, shutting down...");
+  client.destroy();
+});
