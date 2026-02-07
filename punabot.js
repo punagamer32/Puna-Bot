@@ -1,5 +1,5 @@
 // --- punabot.js ---
-import { Client, GatewayIntentBits, ActivityType, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle  } from 'discord.js';
+import { Client, GatewayIntentBits, ActivityType, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle, ChannelType } from 'discord.js';
 import fetch from 'node-fetch';
 import express from 'express';
 import os from 'os';
@@ -70,10 +70,6 @@ client.on('interactionCreate', async (interaction) => {
     }
   }
 });
-setInterval(() => {
-  const channel = client.channels.cache.get(BOT_CHANNEL);
-  if (channel) startTriviaRound(channel);
-}, 30 * 60 * 1000);
 // --- Jokes ---
 import jokes from './jokes.json' with { type: 'json' };
 // --- Health check server ---
@@ -81,13 +77,16 @@ const app = express();
 const PORT = process.env.PORT || 8000;
 app.get('/', (req, res) => res.send('Bot is running ✅'));
 app.listen(PORT, () => console.log(`Health check server on ${PORT}`));
-// --- Ready ---
 client.once('ready', () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
   client.user.setPresence({
     activities: [{ name: '@punagamer32 On YouTube', type: ActivityType.Watching }],
     status: 'online'
   });
+  setInterval(() => {
+    const channel = client.channels.cache.get(BOT_CHANNEL);
+    if (channel) startTriviaRound(channel);
+  }, 30 * 60 * 1000);
 });
 // --- Unified message handler ---
 client.on('messageCreate', async (message) => {
@@ -174,7 +173,7 @@ client.on('messageCreate', async (message) => {
     if (!challenger) return;
     return message.channel.send(`Game started! Both players DM me with rock/paper/scissors.`);
   }
-  if (message.channel.type === 1) { // DM
+  if (message.channel.type === ChannelType.DM) { // DM
     const challenger = Object.keys(activeGames).find(id =>
       [id, activeGames[id].opponent].includes(message.author.id)
     );
@@ -221,5 +220,6 @@ process.on('SIGTERM', () => {
   console.log("⚠️ Received SIGTERM, shutting down...");
   client.destroy();
 });
+
 
 
