@@ -208,7 +208,7 @@ setInterval(async () => {
 // --- Login ---
 async function startBot() {
   try {
-    await client.login(process.env.DISCORD_TOKEN);
+    await client.login(DISCORD_TOKEN);
     console.log("✅ Bot logged in");
   } catch (err) {
     console.error("❌ Login failed, retrying in 10s:", err);
@@ -221,3 +221,4 @@ process.on('SIGTERM', () => {
   console.log("⚠️ Received SIGTERM, shutting down...");
   client.destroy();
 });
+
