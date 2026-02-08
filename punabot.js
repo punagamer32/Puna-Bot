@@ -195,7 +195,7 @@ client.on('messageCreate', async (message) => {
     }
   }
 });
-// --- Koyeb Ping ---
+// --- Render Ping ---
 setInterval(async () => {
   try {
     const res = await fetch('https://puna-bot-v1ar.onrender.com/');
@@ -205,21 +205,18 @@ setInterval(async () => {
   }
 }, 150000); // every 2.5 minutes
 // --- Login ---
+if (!DISCORD_TOKEN) {
+  console.error("❌ No DISCORD_TOKEN found in environment!");
+  process.exit(1);
+}
 async function startBot() {
   try {
+    console.log("Attempting login with token length:", DISCORD_TOKEN.length);
     await client.login(DISCORD_TOKEN);
-    console.log("✅ Bot logged in");
+    console.log("✅ Bot login attempt complete");
   } catch (err) {
     console.error("❌ Login failed, retrying in 10s:", err);
     setTimeout(startBot, 10000);
   }
 }
 startBot();
-// --- Shutdown Handling ---
-process.on('SIGTERM', () => {
-  console.log("⚠️ Received SIGTERM, shutting down...");
-  client.destroy();
-});
-
-
-
