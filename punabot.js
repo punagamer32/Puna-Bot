@@ -112,13 +112,12 @@ client.on('messageCreate', async (message) => {
     const randomIndex = Math.floor(Math.random() * jokes.length);
     const joke = jokes[randomIndex];
     return message.reply(joke);
-    }
   if (message.content === '!trivia') {
     const scoresCollection = db.collection("scores");
     const userScore = await scoresCollection.findOne({ userId: message.author.id });
     const score = userScore?.correctCount || 0;
-    message.reply(`🏆 You have ${score} correct trivia answers!`);
-  }
+    return message.reply(`🏆 You have ${score} correct trivia answers!`);
+    });
   if (message.content.startsWith('!altchecker')) {
     const username = message.content.split(' ')[1];
     if (!username) return message.reply('Please provide a username!');
@@ -177,16 +176,14 @@ client.on('messageCreate', async (message) => {
     console.error(err);
     return message.reply('⚠️ Error fetching party info.');
   }
-if (message.content.startsWith('!rps')) {
-  const opponent = message.mentions.users.first();
-  if (!opponent) return message.reply('Mention someone to challenge!');
-  
-  const gamesCollection = db.collection("games");
-  await gamesCollection.insertOne({
-    challenger: message.author.id,
-    opponent: opponent.id,
-    choices: {}
-  });
+  if (message.content.startsWith('!rps')) {
+    const opponent = message.mentions.users.first();
+    if (!opponent) return message.reply('Mention someone to challenge!');
+    const gamesCollection = db.collection("games");
+    await gamesCollection.insertOne({
+      challenger: message.author.id,
+      opponent: opponent.id,
+      choices: {}
   return message.channel.send(`${opponent}, type **!accept** to play Rock, Paper Scissors!`);
 }
 if (message.content === '!accept') {
@@ -246,6 +243,7 @@ async function startBot() {
   }
 }
 startBot();
+
 
 
 
