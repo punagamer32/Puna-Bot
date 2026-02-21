@@ -3,13 +3,24 @@ import { Client, GatewayIntentBits, ActivityType, ActionRowBuilder, ButtonBuilde
 import fetch from 'node-fetch';
 import express from 'express';
 import os from 'os';
-// --- Constants ---
+// --- Constants ----
+const MONGO_URI = process.env.MONGO_URI; // Atlas connection string
+const clientDB = new MongoClient(MONGO_URI);
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const HYPIXEL_KEY = process.env.HYPIXEL_KEY;
 const BOT_CHANNEL = process.env.BOT_CHANNEL;
 // --- Saved Data ---
-let scores = {}; // { userId: correctCount }
-let activeGames = {};
+let db;
+async function connectDB() {
+  try {
+    await clientDB.connect();
+    db = clientDB.db("punabot"); // database name
+    console.log("✅ Connected to MongoDB");
+  } catch (err) {
+    console.error("❌ MongoDB connection failed:", err);
+  }
+}
+connectDB();
 // --- Discord client ---
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
@@ -59,17 +70,18 @@ client.on('interactionCreate', async (interaction) => {
     if (!triviaActive || !currentTrivia) {
       return interaction.reply({ content: 'No active trivia round!', ephemeral: true });
     }
-    if (guess.toLowerCase() === currentTrivia.answer.toLowerCase()) {
-      triviaActive = false;
-      clearTimeout(triviaTimeout);
-      scores[interaction.user.id] = (scores[interaction.user.id] || 0) + 1;
-      currentTrivia = null;
-      return interaction.reply(`🎉 ${interaction.user} answered correctly!`);
-    } else {
-      return interaction.reply({ content: '❌ Incorrect guess, try again!', ephemeral: true });
-    }
-  }
-});
+if (guess.toLowerCase() === currentTrivia.answer.toLowerCase()) {
+  triviaActive = false;
+  clearTimeout(triviaTimeout);
+  const scoresCollection = db.collection("scores");
+  await scoresCollection.updateOne(
+    { userId: interaction.user.id },
+    { $inc: { correctCount: 1 } },
+    { upsert: true }
+  );
+  currentTrivia = null;
+  return interaction.reply(`🎉 ${interaction.user} answered correctly!`);
+}
 // --- Jokes ---
 import jokes from './jokes.json' with { type: 'json' };
 // --- Health check server ---
@@ -98,9 +110,11 @@ client.on('messageCreate', async (message) => {
     const randomIndex = Math.floor(Math.random() * jokes.length);
     const joke = jokes[randomIndex];
     return message.reply(joke);
-  }
+    }
   if (message.content === '!trivia') {
-    const score = scores[message.author.id] || 0;
+    const scoresCollection = db.collection("scores");
+    const userScore = await scoresCollection.findOne({ userId: message.author.id });
+    const score = userScore?.correctCount || 0;
     message.reply(`🏆 You have ${score} correct trivia answers!`);
   }
   if (message.content.startsWith('!altchecker')) {
@@ -161,39 +175,49 @@ client.on('messageCreate', async (message) => {
     console.error(err);
     return message.reply('⚠️ Error fetching party info.');
   }
+if (message.content.startsWith('!rps')) {
+  const opponent = message.mentions.users.first();
+  if (!opponent) return message.reply('Mention someone to challenge!');
+  
+  const gamesCollection = db.collection("games");
+  await gamesCollection.insertOne({
+    challenger: message.author.id,
+    opponent: opponent.id,
+    choices: {}
+  });
+  return message.channel.send(`${opponent}, type **!accept** to play Rock, Paper Scissors!`);
 }
-  if (message.content.startsWith('!rps')) {
-    const opponent = message.mentions.users.first();
-    if (!opponent) return message.reply('Mention someone to challenge!');
-    activeGames[message.author.id] = { opponent: opponent.id, choices: {} };
-    return message.channel.send(`${opponent}, type **!accept** to play Rock, Paper Scissors!`);
+if (message.content === '!accept') {
+  const gamesCollection = db.collection("games");
+  const game = await gamesCollection.findOne({ opponent: message.author.id });
+  if (!game) return;
+  return message.channel.send(`Game started! Both players DM me with rock/paper/scissors.`);
+}
+if (message.channel.type === ChannelType.DM) {
+  const gamesCollection = db.collection("games");
+  const game = await gamesCollection.findOne({
+    $or: [
+      { challenger: message.author.id },
+      { opponent: message.author.id }
+    ]
+  });
+  if (!game) return;
+  game.choices[message.author.id] = message.content.toLowerCase();
+  await gamesCollection.updateOne({ _id: game._id }, { $set: { choices: game.choices } });
+  if (Object.keys(game.choices).length === 2) {
+    const [p1, p2] = [game.choices[game.challenger], game.choices[game.opponent]];
+    let result;
+    if (p1 === p2) result = 'It’s a tie!';
+    else if ((p1 === 'rock' && p2 === 'scissors') ||
+             (p1 === 'scissors' && p2 === 'paper') ||
+             (p1 === 'paper' && p2 === 'rock')) result = `<@${game.challenger}> wins!`;
+    else result = `<@${game.opponent}> wins!`;
+    message.client.channels.cache
+      .find(c => c.type === 0 && c.members.has(game.challenger))
+      ?.send(`🪨✂️📄 Results:\n<@${game.challenger}> chose **${p1}**\n<@${game.opponent}> chose **${p2}**\n${result}`);
+    await gamesCollection.deleteOne({ _id: game._id });
   }
-  if (message.content === '!accept') {
-    const challenger = Object.keys(activeGames).find(id => activeGames[id].opponent === message.author.id);
-    if (!challenger) return;
-    return message.channel.send(`Game started! Both players DM me with rock/paper/scissors.`);
-  }
-  if (message.channel.type === ChannelType.DM) { // DM
-    const challenger = Object.keys(activeGames).find(id =>
-      [id, activeGames[id].opponent].includes(message.author.id)
-    );
-    if (!challenger) return;
-    const game = activeGames[challenger];
-    game.choices[message.author.id] = message.content.toLowerCase();
-    if (Object.keys(game.choices).length === 2) {
-      const [p1, p2] = [game.choices[challenger], game.choices[game.opponent]];
-      let result;
-      if (p1 === p2) result = 'It’s a tie!';
-      else if ((p1 === 'rock' && p2 === 'scissors') ||
-               (p1 === 'scissors' && p2 === 'paper') ||
-               (p1 === 'paper' && p2 === 'rock')) result = `<@${challenger}> wins!`;
-      else result = `<@${game.opponent}> wins!`;
-      message.client.channels.cache
-        .find(c => c.type === 0 && c.members.has(challenger))
-        ?.send(`🪨✂️📄 Results:\n<@${challenger}> chose **${p1}**\n<@${game.opponent}> chose **${p2}**\n${result}`);
-      delete activeGames[challenger];
-    }
-  }
+}
 });
 // --- Render Ping ---
 setInterval(async () => {
