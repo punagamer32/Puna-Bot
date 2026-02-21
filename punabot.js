@@ -3,6 +3,7 @@ import { Client, GatewayIntentBits, ActivityType, ActionRowBuilder, ButtonBuilde
 import fetch from 'node-fetch';
 import express from 'express';
 import os from 'os';
+import { MongoClient } from "mongodb";
 // --- Constants ----
 const MONGO_URI = process.env.MONGO_URI; // Atlas connection string
 const clientDB = new MongoClient(MONGO_URI);
@@ -30,10 +31,11 @@ import triviaData from './trivia.json' with { type: 'json' };
 let currentTrivia = null;
 let triviaActive = false;
 let triviaTimeout = null;
-function startTriviaRound(channel) {
+async function startTriviaRound(channel) {
   if (triviaActive) return;
-  const randomIndex = Math.floor(Math.random() * triviaData.length);
-  currentTrivia = triviaData[randomIndex];
+  const triviaCollection = db.collection("trivia");
+  const randomTrivia = await triviaCollection.aggregate([{ $sample: { size: 1 } }]).toArray();
+  currentTrivia = randomTrivia[0];
   triviaActive = true;
   const button = new ButtonBuilder()
     .setCustomId('triviaAnswer')
@@ -45,7 +47,7 @@ function startTriviaRound(channel) {
     triviaActive = false;
     currentTrivia = null;
     channel.send('⏰ Trivia round ended. No one got it in time!');
-  }, 5 * 60 * 1000); // 5 minutes
+  }, 5 * 60 * 1000);
 }
 client.on('interactionCreate', async (interaction) => {
   if (interaction.isButton() && interaction.customId === 'triviaAnswer') {
@@ -244,3 +246,4 @@ async function startBot() {
   }
 }
 startBot();
+
