@@ -67,23 +67,25 @@ client.on('interactionCreate', async (interaction) => {
       );
     await interaction.showModal(modal);
   }
-  if (interaction.isModalSubmit() && interaction.customId === 'triviaModal') {
-    const guess = interaction.fields.getTextInputValue('answerField').trim();
-    if (!triviaActive || !currentTrivia) {
-      return interaction.reply({ content: 'No active trivia round!', ephemeral: true });
-    }
-if (guess.toLowerCase() === currentTrivia.answer.toLowerCase()) {
-  triviaActive = false;
-  clearTimeout(triviaTimeout);
-  const scoresCollection = db.collection("scores");
-  await scoresCollection.updateOne(
-    { userId: interaction.user.id },
-    { $inc: { correctCount: 1 } },
-    { upsert: true }
-  );
-  currentTrivia = null;
-  return interaction.reply(`🎉 ${interaction.user} answered correctly!`);
+if (interaction.isModalSubmit() && interaction.customId === 'triviaModal') {
+  const guess = interaction.fields.getTextInputValue('answerField').trim();
+  if (!triviaActive || !currentTrivia) {
+    return interaction.reply({ content: 'No active trivia round!', ephemeral: true });
+  }
+  if (guess.toLowerCase() === currentTrivia.answer.toLowerCase()) {
+    triviaActive = false;
+    clearTimeout(triviaTimeout);
+    const scoresCollection = db.collection("scores");
+    await scoresCollection.updateOne(
+      { userId: interaction.user.id },
+      { $inc: { correctCount: 1 } },
+      { upsert: true }
+    );
+    currentTrivia = null;
+    return interaction.reply(`🎉 ${interaction.user} answered correctly!`);
+  }
 }
+});
 // --- Jokes ---
 const jokes = require('./jokes.json');
 // --- Health check server ---
@@ -243,6 +245,7 @@ async function startBot() {
   }
 }
 startBot();
+
 
 
 
