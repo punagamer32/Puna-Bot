@@ -15,7 +15,7 @@ let db;
 async function connectDB() {
   try {
     await clientDB.connect();
-    db = clientDB.db("punabot"); // database name
+    db = clientDB.db("Puna Bot"); // database name
     console.log("✅ Connected to MongoDB");
   } catch (err) {
     console.error("❌ MongoDB connection failed:", err);
@@ -246,5 +246,6 @@ async function startBot() {
   }
 }
 startBot();
+
 
 
