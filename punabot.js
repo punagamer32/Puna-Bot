@@ -85,7 +85,7 @@ if (guess.toLowerCase() === currentTrivia.answer.toLowerCase()) {
   return interaction.reply(`🎉 ${interaction.user} answered correctly!`);
 }
 // --- Jokes ---
-import jokes from './jokes.json' with { type: 'json' };
+const jokes = require('./jokes.json');
 // --- Health check server ---
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -246,4 +246,5 @@ async function startBot() {
   }
 }
 startBot();
+
 
