@@ -99,11 +99,14 @@ client.once('ready', () => {
     activities: [{ name: '@punagamer32 On YouTube', type: ActivityType.Watching }],
     status: 'online'
   });
-  setInterval(() => {
-    const channel = client.channels.cache.get(BOT_CHANNEL);
+setInterval(async () => {
+  const settingsCollection = db.collection("settings");
+  const settings = await settingsCollection.findOne({ guildId: client.guilds.cache.first().id });
+  if (settings?.botChannel) {
+    const channel = client.channels.cache.get(settings.botChannel);
     if (channel) startTriviaRound(channel);
-  }, 30 * 60 * 1000);
-});
+  }
+}, 30 * 60 * 1000);
 // --- Unified message handler ---
 client.on('messageCreate', async (message) => {
   console.log(`[${message.author.tag}] (${message.channel.type}) ${message.content}`);
@@ -219,6 +222,39 @@ if (message.channel.type === ChannelType.DM) {
     await gamesCollection.deleteOne({ _id: game._id });
   }
 }
+if (message.content.startsWith('!channel')) {
+  const args = message.content.split(' ').slice(1);
+  const settingsCollection = db.collection("settings");
+  // No args → show usage
+  if (args.length === 0) {
+    return message.reply(
+      "📌 Channel command usage:\n" +
+      "`!channel set` → Set the bot’s channel to the current channel (requires Manage Server)\n" +
+      "`!channel check` → Check the current bot channel"
+    );
+  }
+  // !channel set → current channel only
+  if (args[0] === 'set') {
+    if (!message.member.permissions.has('ManageGuild')) {
+      return message.reply("❌ You need the **Manage Server** permission to set the bot channel.");
+    }
+    await settingsCollection.updateOne(
+      { guildId: message.guild.id },
+      { $set: { botChannel: message.channel.id } },
+      { upsert: true }
+    );
+    return message.reply(`✅ Bot channel set to ${message.channel}.`);
+  }
+  // !channel check
+  if (args[0] === 'check') {
+    const settings = await settingsCollection.findOne({ guildId: message.guild.id });
+    if (!settings?.botChannel) {
+      return message.reply("⚠️ No bot channel set yet. Use `!channel set` in the desired channel.");
+    }
+    const channel = message.guild.channels.cache.get(settings.botChannel);
+    return message.reply(`📢 Current bot channel is <#${channel}>.`);
+  }
+}
 });
 // --- Render Ping ---
 setInterval(async () => {
@@ -245,6 +281,7 @@ async function startBot() {
   }
 }
 startBot();
+
 
 
 
