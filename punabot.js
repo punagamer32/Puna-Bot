@@ -252,12 +252,6 @@ if (message.channel.type === ChannelType.DM) {
     }
   }
 });
-}, 150000); // every 2.5 minutes
-// --- Login ---
-if (!DISCORD_TOKEN) {
-  console.error("❌ No DISCORD_TOKEN found in environment!");
-  process.exit(1);
-}
 // --- Render Ping ---
 setInterval(async () => {
   try {
@@ -266,6 +260,12 @@ setInterval(async () => {
   } catch (err) {
     console.error('Ping failed:', err);
   }
+}, 150000);
+// --- Login ---
+if (!DISCORD_TOKEN) {
+  console.error("❌ No DISCORD_TOKEN found in environment!");
+  process.exit(1);
+}
 async function startBot() {
   try {
     console.log("Attempting login with token length:", DISCORD_TOKEN.length);
@@ -277,17 +277,3 @@ async function startBot() {
   }
 }
 startBot();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
