@@ -5,11 +5,10 @@ import express from 'express';
 import os from 'os';
 import { MongoClient } from "mongodb";
 // --- Constants ----
-const MONGO_URI = process.env.MONGO_URI; // Atlas connection string
-const clientDB = new MongoClient(MONGO_URI);
+const MONGO_URI = process.env.MONGO_URL;v
+const clientDB = new MongoClient(MONGO_URL);
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const HYPIXEL_KEY = process.env.HYPIXEL_KEY;
-const BOT_CHANNEL = process.env.BOT_CHANNEL;
 // --- Saved Data ---
 let db;
 async function connectDB() {
@@ -279,4 +278,5 @@ async function startBot() {
   }
 }
 startBot();
+
 
