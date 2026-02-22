@@ -72,6 +72,7 @@ if (interaction.isModalSubmit() && interaction.customId === 'triviaModal') {
   if (!triviaActive || !currentTrivia) {
     return interaction.reply({ content: 'No active trivia round!', ephemeral: true });
   }
+}); 
   if (guess.toLowerCase() === currentTrivia.answer.toLowerCase()) {
     triviaActive = false;
     clearTimeout(triviaTimeout);
@@ -117,12 +118,13 @@ client.on('messageCreate', async (message) => {
     const randomIndex = Math.floor(Math.random() * jokes.length);
     const joke = jokes[randomIndex];
     return message.reply(joke);
+  };
   if (message.content === '!trivia') {
     const scoresCollection = db.collection("scores");
     const userScore = await scoresCollection.findOne({ userId: message.author.id });
     const score = userScore?.correctCount || 0;
     return message.reply(`🏆 You have ${score} correct trivia answers!`);
-    });
+  }
   if (message.content.startsWith('!altchecker')) {
     const username = message.content.split(' ')[1];
     if (!username) return message.reply('Please provide a username!');
@@ -256,6 +258,7 @@ if (message.content.startsWith('!channel')) {
   }
 }
 });
+}
 // --- Render Ping ---
 setInterval(async () => {
   try {
@@ -281,6 +284,7 @@ async function startBot() {
   }
 }
 startBot();
+
 
 
 
