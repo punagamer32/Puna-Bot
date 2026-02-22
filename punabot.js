@@ -258,6 +258,14 @@ if (!DISCORD_TOKEN) {
   console.error("❌ No DISCORD_TOKEN found in environment!");
   process.exit(1);
 }
+// --- Render Ping ---
+setInterval(async () => {
+  try {
+    const res = await fetch('https://puna-bot-v1ar.onrender.com/');
+    console.log('Pinged Render:', res.status);
+  } catch (err) {
+    console.error('Ping failed:', err);
+  }
 async function startBot() {
   try {
     console.log("Attempting login with token length:", DISCORD_TOKEN.length);
@@ -269,6 +277,7 @@ async function startBot() {
   }
 }
 startBot();
+
 
 
 
