@@ -117,7 +117,7 @@ client.on('messageCreate', async (message) => {
     const randomIndex = Math.floor(Math.random() * jokes.length);
     const joke = jokes[randomIndex];
     return message.reply(joke);
-  };
+  }
   if (message.content === '!trivia') {
     const scoresCollection = db.collection("scores");
     const userScore = await scoresCollection.findOne({ userId: message.author.id });
@@ -138,41 +138,38 @@ client.on('messageCreate', async (message) => {
     }
   }
   if (message.content.startsWith('!bedwars')) {
-  const username = message.content.split(' ')[1];
-  if (!username) return message.reply('Please provide a username!');
-  try {
-    const mojangRes = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
-    const mojangData = await mojangRes.json();
-    const uuid = mojangData.id;
-    const hypixelRes = await fetch(`https://api.hypixel.net/player?key=${HYPIXEL_KEY}&uuid=${uuid}`);
-    const hypixelData = await hypixelRes.json();
-    if (!hypixelData.player) return message.reply('Player not found!');
-    const bedwars = hypixelData.player.stats.Bedwars;
-    return message.reply(
-      `🏰 Bedwars stats for **${username}**:\nWins: ${bedwars.wins_bedwars}\nLosses: ${bedwars.losses_bedwars}\nKills: ${bedwars.kills_bedwars}\nDeaths: ${bedwars.deaths_bedwars}`
-    );
-  } catch (err) {
-    console.error(err);
-    return message.reply('⚠️ Error fetching stats.');
+    const username = message.content.split(' ')[1];
+    if (!username) return message.reply('Please provide a username!');
+    try {
+      const mojangRes = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
+      const mojangData = await mojangRes.json();
+      const uuid = mojangData.id;
+      const hypixelRes = await fetch(`https://api.hypixel.net/player?key=${HYPIXEL_KEY}&uuid=${uuid}`);
+      const hypixelData = await hypixelRes.json();
+      if (!hypixelData.player) return message.reply('Player not found!');
+      const bedwars = hypixelData.player.stats.Bedwars;
+      return message.reply(
+        `🏰 Bedwars stats for **${username}**:\nWins: ${bedwars.wins_bedwars}\nLosses: ${bedwars.losses_bedwars}\nKills: ${bedwars.kills_bedwars}\nDeaths: ${bedwars.deaths_bedwars}`
+      );
+    } catch (err) {
+      console.error(err);
+      return message.reply('⚠️ Error fetching stats.');
+    }
   }
-}
   if (message.content.startsWith('!partychecker')) {
   const username = message.content.split(' ')[1];
   if (!username) return message.reply('Please provide a username!');
   try {
-    // Step 1: Get UUID from Mojang
     const mojangRes = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
     if (mojangRes.status === 204) return message.reply(`❌ ${username} is not valid.`);
     const mojangData = await mojangRes.json();
     const uuid = mojangData.id;
-    // Step 2: Get Hypixel session info
     const sessionRes = await fetch(`https://api.hypixel.net/session?key=${HYPIXEL_KEY}&uuid=${uuid}`);
     const sessionData = await sessionRes.json();
     if (!sessionData.session) {
       return message.reply(`ℹ️ ${username} is not currently in a party or game.`);
     }
     const { gameType, players } = sessionData.session;
-    // Step 3: Build response
     let reply = `🎉 Party info for **${username}**:\n`;
     reply += `Game: ${gameType}\n`;
     reply += `Players: ${players.join(', ')}\n`;
@@ -181,19 +178,22 @@ client.on('messageCreate', async (message) => {
   } catch (err) {
     console.error(err);
     return message.reply('⚠️ Error fetching party info.');
+    } catch (err) {
+      console.error(err);
+      return message.reply('⚠️ Error fetching party info.');
+    }
   }
-if (message.content.startsWith('!rps')) {
-  const opponent = message.mentions.users.first();
-  if (!opponent) return message.reply('Mention someone to challenge!');
-
-  const gamesCollection = db.collection("games");
-  await gamesCollection.insertOne({
-    challenger: message.author.id,
-    opponent: opponent.id,
-    choices: {}
-  });
-  return message.channel.send(`${opponent}, type **!accept** to play Rock, Paper Scissors!`);
-}
+  if (message.content.startsWith('!rps')) {
+    const opponent = message.mentions.users.first();
+    if (!opponent) return message.reply('Mention someone to challenge!');
+    const gamesCollection = db.collection("games");
+    await gamesCollection.insertOne({
+      challenger: message.author.id,
+      opponent: opponent.id,
+      choices: {}
+    });
+    return message.channel.send(`${opponent}, type **!accept** to play Rock, Paper Scissors!`);
+  }
 if (message.content === '!accept') {
   const gamesCollection = db.collection("games");
   const game = await gamesCollection.findOne({ opponent: message.author.id });
@@ -225,41 +225,36 @@ if (message.channel.type === ChannelType.DM) {
     await gamesCollection.deleteOne({ _id: game._id });
   }
 }
-if (message.content.startsWith('!channel')) {
-  const args = message.content.split(' ').slice(1);
-  const settingsCollection = db.collection("settings");
-  // No args → show usage
-  if (args.length === 0) {
-    return message.reply(
-      "📌 Channel command usage:\n" +
-      "`!channel set` → Set the bot’s channel to the current channel (requires Manage Server)\n" +
-      "`!channel check` → Check the current bot channel"
-    );
-  }
-  // !channel set → current channel only
-  if (args[0] === 'set') {
-    if (!message.member.permissions.has('ManageGuild')) {
-      return message.reply("❌ You need the **Manage Server** permission to set the bot channel.");
+  if (message.content.startsWith('!channel')) {
+    const args = message.content.split(' ').slice(1);
+    const settingsCollection = db.collection("settings");
+    if (args.length === 0) {
+      return message.reply(
+        "📌 Channel command usage:\n" +
+        "`!channel set` → Set the bot’s channel to the current channel (requires Manage Server)\n" +
+        "`!channel check` → Check the current bot channel"
+      );
     }
-    await settingsCollection.updateOne(
-      { guildId: message.guild.id },
-      { $set: { botChannel: message.channel.id } },
-      { upsert: true }
-    );
-    return message.reply(`✅ Bot channel set to ${message.channel}.`);
-  }
-  // !channel check
-  if (args[0] === 'check') {
-    const settings = await settingsCollection.findOne({ guildId: message.guild.id });
-    if (!settings?.botChannel) {
-      return message.reply("⚠️ No bot channel set yet. Use `!channel set` in the desired channel.");
+    if (args[0] === 'set') {
+      if (!message.member.permissions.has('ManageGuild')) {
+        return message.reply("❌ You need the **Manage Server** permission to set the bot channel.");
+      }
+      await settingsCollection.updateOne(
+        { guildId: message.guild.id },
+        { $set: { botChannel: message.channel.id } },
+        { upsert: true }
+      );
+      return message.reply(`✅ Bot channel set to ${message.channel}.`);
     }
-    const channel = message.guild.channels.cache.get(settings.botChannel);
-    return message.reply(`📢 Current bot channel is <#${settings.botChannel}>.`);
+    if (args[0] === 'check') {
+      const settings = await settingsCollection.findOne({ guildId: message.guild.id });
+      if (!settings?.botChannel) {
+        return message.reply("⚠️ No bot channel set yet. Use `!channel set` in the desired channel.");
+      }
+      return message.reply(`📢 Current bot channel is <#${settings.botChannel}>.`);
+    }
   }
-}
 });
-}
 // --- Render Ping ---
 setInterval(async () => {
   try {
@@ -285,6 +280,7 @@ async function startBot() {
   }
 }
 startBot();
+
 
 
 
