@@ -15,7 +15,7 @@ let db;
 async function connectDB() {
   try {
     await clientDB.connect();
-    db = clientDB.db("Puna Bot"); // database name
+    db = clientDB.db("punabot");
     console.log("✅ Connected to MongoDB");
   } catch (err) {
     console.error("❌ MongoDB connection failed:", err);
@@ -67,25 +67,24 @@ client.on('interactionCreate', async (interaction) => {
       );
     await interaction.showModal(modal);
   }
-if (interaction.isModalSubmit() && interaction.customId === 'triviaModal') {
-  const guess = interaction.fields.getTextInputValue('answerField').trim();
-  if (!triviaActive || !currentTrivia) {
-    return interaction.reply({ content: 'No active trivia round!', ephemeral: true });
+  if (interaction.isModalSubmit() && interaction.customId === 'triviaModal') {
+    const guess = interaction.fields.getTextInputValue('answerField').trim();
+    if (!triviaActive || !currentTrivia) {
+      return interaction.reply({ content: 'No active trivia round!', ephemeral: true });
+    }
+    if (guess.toLowerCase() === currentTrivia.answer.toLowerCase()) {
+      triviaActive = false;
+      clearTimeout(triviaTimeout);
+      const scoresCollection = db.collection("scores");
+      await scoresCollection.updateOne(
+        { userId: interaction.user.id },
+        { $inc: { correctCount: 1 } },
+        { upsert: true }
+      );
+      currentTrivia = null;
+      return interaction.reply(`🎉 ${interaction.user} answered correctly!`);
+    }
   }
-}); 
-  if (guess.toLowerCase() === currentTrivia.answer.toLowerCase()) {
-    triviaActive = false;
-    clearTimeout(triviaTimeout);
-    const scoresCollection = db.collection("scores");
-    await scoresCollection.updateOne(
-      { userId: interaction.user.id },
-      { $inc: { correctCount: 1 } },
-      { upsert: true }
-    );
-    currentTrivia = null;
-    return interaction.reply(`🎉 ${interaction.user} answered correctly!`);
-  }
-}
 });
 // --- Jokes ---
 const jokes = require('./jokes.json');
@@ -177,7 +176,7 @@ client.on('messageCreate', async (message) => {
     let reply = `🎉 Party info for **${username}**:\n`;
     reply += `Game: ${gameType}\n`;
     reply += `Players: ${players.join(', ')}\n`;
-    reply += `Leader: ${players[0]}`; // usually first in the list
+    reply += `Leader: ${players[0]}`;
     return message.reply(reply);
   } catch (err) {
     console.error(err);
@@ -284,6 +283,7 @@ async function startBot() {
   }
 }
 startBot();
+
 
 
 
