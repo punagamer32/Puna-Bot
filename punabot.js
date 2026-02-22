@@ -5,7 +5,7 @@ import express from 'express';
 import os from 'os';
 import { MongoClient } from "mongodb";
 // --- Constants ----
-const MONGO_URI = process.env.MONGO_URL;v
+const MONGO_URI = process.env.MONGO_URL;
 const clientDB = new MongoClient(MONGO_URL);
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const HYPIXEL_KEY = process.env.HYPIXEL_KEY;
@@ -278,5 +278,6 @@ async function startBot() {
   }
 }
 startBot();
+
 
 
