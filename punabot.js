@@ -254,7 +254,7 @@ if (message.content.startsWith('!channel')) {
       return message.reply("⚠️ No bot channel set yet. Use `!channel set` in the desired channel.");
     }
     const channel = message.guild.channels.cache.get(settings.botChannel);
-    return message.reply(`📢 Current bot channel is <#${channel}>.`);
+    return message.reply(`📢 Current bot channel is <#${settings.botChannel}>.`);
   }
 }
 });
@@ -284,6 +284,7 @@ async function startBot() {
   }
 }
 startBot();
+
 
 
 
