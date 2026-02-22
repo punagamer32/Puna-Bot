@@ -90,7 +90,7 @@ client.on('interactionCreate', async (interaction) => {
   }
 });
 // --- Jokes ---
-const jokes = require('./jokes.json');
+const jokes = import jokes from './jokes.json' with { type: 'json' };
 // --- Health check server ---
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -282,6 +282,7 @@ async function startBot() {
   }
 }
 startBot();
+
 
 
 
