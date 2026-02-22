@@ -99,14 +99,16 @@ client.once('ready', () => {
     activities: [{ name: '@punagamer32 On YouTube', type: ActivityType.Watching }],
     status: 'online'
   });
-setInterval(async () => {
-  const settingsCollection = db.collection("settings");
-  const settings = await settingsCollection.findOne({ guildId: client.guilds.cache.first().id });
-  if (settings?.botChannel) {
-    const channel = client.channels.cache.get(settings.botChannel);
-    if (channel) startTriviaRound(channel);
-  }
-}, 30 * 60 * 1000);
+
+  setInterval(async () => {
+    const settingsCollection = db.collection("settings");
+    const settings = await settingsCollection.findOne({ guildId: client.guilds.cache.first().id });
+    if (settings?.botChannel) {
+      const channel = client.channels.cache.get(settings.botChannel);
+      if (channel) startTriviaRound(channel);
+    }
+  }, 30 * 60 * 1000);
+});
 // --- Unified message handler ---
 client.on('messageCreate', async (message) => {
   console.log(`[${message.author.tag}] (${message.channel.type}) ${message.content}`);
@@ -277,3 +279,4 @@ async function startBot() {
   }
 }
 startBot();
+
