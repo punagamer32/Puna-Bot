@@ -6,7 +6,7 @@ import os from 'os';
 import { MongoClient } from "mongodb";
 // --- Constants ----
 const MONGO_URL = process.env.MONGO_URL;
-if (!MONGO_URI) {
+if (!MONGO_URL) {
   console.error("❌ No MongoDB connection string found in environment!");
   process.exit(1);
 }
@@ -282,6 +282,7 @@ async function startBot() {
   }
 }
 startBot();
+
 
 
 
