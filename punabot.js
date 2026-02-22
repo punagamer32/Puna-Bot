@@ -178,9 +178,6 @@ client.on('messageCreate', async (message) => {
   } catch (err) {
     console.error(err);
     return message.reply('⚠️ Error fetching party info.');
-    } catch (err) {
-      console.error(err);
-      return message.reply('⚠️ Error fetching party info.');
     }
   }
   if (message.content.startsWith('!rps')) {
@@ -280,6 +277,7 @@ async function startBot() {
   }
 }
 startBot();
+
 
 
 
