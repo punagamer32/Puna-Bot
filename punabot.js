@@ -4,8 +4,7 @@ import fetch from 'node-fetch';
 import express from 'express';
 import os from 'os';
 import { MongoClient } from "mongodb";
-// --- Constants ----
-const settingsCollection = db.collection("settings");
+// --- Constants ---
 const MONGO_URL = process.env.MONGO_URL;
 if (!MONGO_URL) {
   console.error("❌ No MongoDB connection string found in environment!");
@@ -26,6 +25,7 @@ async function connectDB() {
   }
 }
 connectDB();
+const settingsCollection = db.collection("settings");
 // --- Discord client ---
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
@@ -283,3 +283,4 @@ async function startBot() {
   }
 }
 startBot();
+
