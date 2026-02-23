@@ -4,12 +4,8 @@ import fetch from 'node-fetch';
 import express from 'express';
 import os from 'os';
 import { MongoClient } from "mongodb";
-// --- Database Check ---
-if (!db) {
-  return message.reply("⚠️ Database not ready yet. Try again in a moment.");
-}
-const settingsCollection = db.collection("settings");
 // --- Constants ----
+const settingsCollection = db.collection("settings");
 const MONGO_URL = process.env.MONGO_URL;
 if (!MONGO_URL) {
   console.error("❌ No MongoDB connection string found in environment!");
@@ -286,3 +282,4 @@ async function startBot() {
   }
 }
 startBot();
+
