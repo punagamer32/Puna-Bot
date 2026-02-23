@@ -269,6 +269,7 @@ setInterval(async () => {
 if (!DISCORD_TOKEN) {
   console.error("❌ No DISCORD_TOKEN found in environment!");
   process.exit(1);
+}
 async function startBot() {
   try {
     await clientDB.connect();
@@ -282,4 +283,3 @@ async function startBot() {
   }
 }
 startBot();
-
