@@ -15,17 +15,18 @@ const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const HYPIXEL_KEY = process.env.HYPIXEL_KEY;
 // --- Saved Data ---
 let db;
+let settingsCollection;
 async function connectDB() {
   try {
     await clientDB.connect();
     db = clientDB.db("punabot");
+    settingsCollection = db.collection("settings");
     console.log("✅ Connected to MongoDB");
   } catch (err) {
     console.error("❌ MongoDB connection failed:", err);
   }
 }
 connectDB();
-const settingsCollection = db.collection("settings");
 // --- Discord client ---
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
@@ -283,4 +284,5 @@ async function startBot() {
   }
 }
 startBot();
+
 
