@@ -4,6 +4,11 @@ import fetch from 'node-fetch';
 import express from 'express';
 import os from 'os';
 import { MongoClient } from "mongodb";
+// --- Database Check ---
+if (!db) {
+  return message.reply("⚠️ Database not ready yet. Try again in a moment.");
+}
+const settingsCollection = db.collection("settings");
 // --- Constants ----
 const MONGO_URL = process.env.MONGO_URL;
 if (!MONGO_URL) {
@@ -104,7 +109,6 @@ client.once('ready', () => {
   });
 
   setInterval(async () => {
-    const settingsCollection = db.collection("settings");
     const settings = await settingsCollection.findOne({ guildId: client.guilds.cache.first().id });
     if (settings?.botChannel) {
       const channel = client.channels.cache.get(settings.botChannel);
@@ -229,7 +233,6 @@ if (message.channel.type === ChannelType.DM) {
 }
   if (message.content.startsWith('!channel')) {
     const args = message.content.split(' ').slice(1);
-    const settingsCollection = db.collection("settings");
     if (args.length === 0) {
       return message.reply(
         "📌 Channel command usage:\n" +
@@ -270,22 +273,16 @@ setInterval(async () => {
 if (!DISCORD_TOKEN) {
   console.error("❌ No DISCORD_TOKEN found in environment!");
   process.exit(1);
-}
 async function startBot() {
   try {
-    console.log("Attempting login with token length:", DISCORD_TOKEN.length);
+    await clientDB.connect();
+    db = clientDB.db("punabot");
+    console.log("✅ Connected to MongoDB");
     await client.login(DISCORD_TOKEN);
     console.log("✅ Bot login attempt complete");
   } catch (err) {
-    console.error("❌ Login failed, retrying in 10s:", err);
+    console.error("❌ Startup failed:", err);
     setTimeout(startBot, 10000);
   }
 }
 startBot();
-
-
-
-
-
-
-
