@@ -13,20 +13,6 @@ if (!MONGO_URL) {
 const clientDB = new MongoClient(MONGO_URL);
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const HYPIXEL_KEY = process.env.HYPIXEL_KEY;
-// --- Saved Data ---
-let db;
-let settingsCollection;
-async function connectDB() {
-  try {
-    await clientDB.connect();
-    db = clientDB.db("punabot");
-    settingsCollection = db.collection("settings");
-    console.log("✅ Connected to MongoDB");
-  } catch (err) {
-    console.error("❌ MongoDB connection failed:", err);
-  }
-}
-connectDB();
 // --- Discord client ---
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
@@ -266,7 +252,7 @@ setInterval(async () => {
     console.error('Ping failed:', err);
   }
 }, 150000);
-// --- Login ---
+// --- Startup ---
 if (!DISCORD_TOKEN) {
   console.error("❌ No DISCORD_TOKEN found in environment!");
   process.exit(1);
@@ -275,6 +261,7 @@ async function startBot() {
   try {
     await clientDB.connect();
     db = clientDB.db("punabot");
+    settingsCollection = db.collection("settings");
     console.log("✅ Connected to MongoDB");
     await client.login(DISCORD_TOKEN);
     console.log("✅ Bot login attempt complete");
@@ -284,5 +271,3 @@ async function startBot() {
   }
 }
 startBot();
-
-
