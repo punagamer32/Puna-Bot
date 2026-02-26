@@ -5,12 +5,12 @@ import express from 'express';
 import os from 'os';
 import { MongoClient } from "mongodb";
 // --- Constants ---
-const MONGO_URL = process.env.MONGO_URL;
-if (!MONGO_URL) {
+const MONGO_URI = process.env.MONGO_URI;
+if (!MONGO_URI) {
   console.error("❌ No MongoDB connection string found in environment!");
   process.exit(1);
 }
-const clientDB = new MongoClient(MONGO_URL);
+const clientDB = new MongoClient(MONGO_URI);
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const HYPIXEL_KEY = process.env.HYPIXEL_KEY;
 // --- Discord client ---
@@ -271,3 +271,4 @@ async function startBot() {
   }
 }
 startBot();
+
