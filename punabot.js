@@ -259,6 +259,7 @@ if (!DISCORD_TOKEN) {
 }
 async function startBot() {
   try {
+    console.log("Connecting with URI:", MONGO_URI);
     await clientDB.connect();
     db = clientDB.db("punabot");
     settingsCollection = db.collection("settings");
@@ -271,4 +272,5 @@ async function startBot() {
   }
 }
 startBot();
+
 
