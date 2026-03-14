@@ -244,6 +244,7 @@ if (message.channel.type === ChannelType.DM) {
   }
 });
 // --- Render Ping ---
+console.log("Node.js version:", process.version)
 setInterval(async () => {
   try {
     const res = await fetch('https://puna-bot-v1ar.onrender.com/');
