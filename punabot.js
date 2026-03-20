@@ -4,6 +4,7 @@ import fetch from 'node-fetch';
 import express from 'express';
 import os from 'os';
 import { MongoClient } from "mongodb";
+import triviaData from './trivia.json' with { type: 'json' };
 // --- Constants ---
 const MONGO_URI = process.env.MONGO_URI;
 if (!MONGO_URI) {
@@ -26,13 +27,8 @@ let triviaTimeout = null;
 // --- Start Trivia Round ---
 async function startTriviaRound(channel) {
   if (triviaActive) return;
-  const triviaCollection = db.collection("trivia");
-  const randomTrivia = await triviaCollection.aggregate([{ $sample: { size: 1 } }]).toArray();
-  if (!randomTrivia.length) {
-    channel.send("⚠️ No trivia questions available in the database.");
-    return;
-  }
-  currentTrivia = randomTrivia[0];
+  const randomIndex = Math.floor(Math.random() * triviaData.length);
+  currentTrivia = triviaData[randomIndex];
   triviaActive = true;
   const button = new ButtonBuilder()
     .setCustomId('triviaAnswer')
