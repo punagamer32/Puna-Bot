@@ -86,18 +86,28 @@ const app = express();
 const PORT = process.env.PORT || 8000;
 app.get('/', (req, res) => res.send('Bot is running ✅'));
 app.listen(PORT, () => console.log(`Health check server on ${PORT}`));
-client.once('ready', () => {
+client.once('ready', async () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
-  client.user.setPresence({
-    activities: [{ name: '@punagamer32 On YouTube', type: ActivityType.Watching }],
-    status: 'online'
-  });
-
+client.user.setPresence({
+  activities: [{
+    name: 'Punabot Live!',
+    type: ActivityType.Streaming,
+    url: 'https://www.youtube.com/@punagamer32/live' // direct live stream link
+  }],
+  status: 'online'
+});
   setInterval(async () => {
-    const settings = await settingsCollection.findOne({ guildId: client.guilds.cache.first().id });
-    if (settings?.botChannel) {
-      const channel = client.channels.cache.get(settings.botChannel);
-      if (channel) startTriviaRound(channel);
+    try {
+      const settings = await settingsCollection.findOne({ guildId: client.guilds.cache.first().id });
+      if (settings?.botChannel) {
+        const channel = await client.channels.fetch(settings.botChannel); // fetch instead of cache
+        if (channel) {
+          console.log("⚡ Starting trivia round in", channel.name);
+          startTriviaRound(channel);
+        }
+      }
+    } catch (err) {
+      console.error("Trivia interval error:", err);
     }
   }, 30 * 60 * 1000);
 });
