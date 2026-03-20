@@ -21,26 +21,29 @@ const client = new Client({
 // --- Globals ---
 let db;
 let settingsCollection;
-let currentTrivia = null;
-let triviaActive = false;
-let triviaTimeout = null;
+const triviaState = {};
 // --- Start Trivia Round ---
 async function startTriviaRound(channel) {
-  if (triviaActive) return;
+  const guildId = channel.guild.id;
+  if (triviaState[guildId]?.active) return;
   const randomIndex = Math.floor(Math.random() * triviaData.length);
-  currentTrivia = triviaData[randomIndex];
-  triviaActive = true;
+  const currentTrivia = triviaData[randomIndex];
+  triviaState[guildId] = {
+    active: true,
+    currentTrivia,
+    timeout: setTimeout(() => {
+      triviaState[guildId].active = false;
+      triviaState[guildId].currentTrivia = null;
+      channel.send('⏰ Trivia round ended. No one got it in time!');
+    }, 5 * 60 * 1000)
+  };
   const button = new ButtonBuilder()
     .setCustomId('triviaAnswer')
     .setLabel('Answer Trivia')
     .setStyle(ButtonStyle.Primary);
+
   const row = new ActionRowBuilder().addComponents(button);
   channel.send({ content: `🧠 Trivia Time!\n${currentTrivia.question}`, components: [row] });
-  triviaTimeout = setTimeout(() => {
-    triviaActive = false;
-    currentTrivia = null;
-    channel.send('⏰ Trivia round ended. No one got it in time!');
-  }, 5 * 60 * 1000);
 }
 client.on('interactionCreate', async (interaction) => {
   const guildId = interaction.guildId;
