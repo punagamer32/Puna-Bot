@@ -21,21 +21,21 @@ const client = new Client({
 });
 // --- Create Role ---
 client.on('guildCreate', async (guild) => {
-    const role = await guild.roles.create({
-      name: 'Punabot Admin',
-      color: 'BLUE',
-      permissions: ['Administrator'], // full admin rights
-      reason: 'Auto-created admin role for Punabot'
-    });
-    console.log(`✅ Created role ${role.name} in guild ${guild.name}`);
-    const botMember = guild.members.me;
-    if (botMember) {
-      await botMember.roles.add(role);
-      console.log(`✅ Assigned ${role.name} to the bot in ${guild.name}`);
-    }
-  } catch (err) {
-    console.error(`❌ Failed to create role in ${guild.name}:`, err);
+  const role = await guild.roles.create({
+    name: 'Punabot Admin',
+    color: 'BLUE',
+    permissions: ['Administrator'], // full admin rights
+    reason: 'Auto-created admin role for Punabot'
+  });
+  console.log(`✅ Created role ${role.name} in guild ${guild.name}`);
+  const botMember = guild.members.me;
+  if (botMember) {
+    await botMember.roles.add(role);
+    console.log(`✅ Assigned ${role.name} to the bot in ${guild.name}`);
   }
+} catch (err) {
+  console.error(`❌ Failed to create role in ${guild.name}:`, err);
+}
 });
 //--- Trivia ---
 import triviaData from './trivia.json' with { type: 'json' };
