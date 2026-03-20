@@ -88,19 +88,27 @@ app.get('/', (req, res) => res.send('Bot is running ✅'));
 app.listen(PORT, () => console.log(`Health check server on ${PORT}`));
 client.once('ready', async () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
-client.user.setPresence({
-  activities: [{
-    name: 'Punabot Live!',
-    type: ActivityType.Streaming,
-    url: 'https://www.youtube.com/@punagamer32/live' // direct live stream link
-  }],
-  status: 'online'
-});
+  client.user.setPresence({
+    activities: [{ name: '@punagamer32 On YouTube', type: ActivityType.Streaming, url: 'https://www.youtube.com/@punagamer32/live' }],
+    status: 'online'
+  });
+  try {
+    const settings = await settingsCollection.findOne({ guildId: client.guilds.cache.first().id });
+    if (settings?.botChannel) {
+      const channel = await client.channels.fetch(settings.botChannel);
+      if (channel) {
+        console.log("⚡ Starting trivia round immediately in", channel.name);
+        startTriviaRound(channel);
+      }
+    }
+  } catch (err) {
+    console.error("Startup trivia error:", err);
+  }
   setInterval(async () => {
     try {
       const settings = await settingsCollection.findOne({ guildId: client.guilds.cache.first().id });
       if (settings?.botChannel) {
-        const channel = await client.channels.fetch(settings.botChannel); // fetch instead of cache
+        const channel = await client.channels.fetch(settings.botChannel);
         if (channel) {
           console.log("⚡ Starting trivia round in", channel.name);
           startTriviaRound(channel);
@@ -128,6 +136,12 @@ client.on('messageCreate', async (message) => {
     const score = userScore?.correctCount || 0;
     return message.reply(`🏆 You have ${score} correct trivia answers!`);
   }
+  if (message.content === '!triviamanual') {
+  if (!message.member.permissions.has('ManageGuild')) {
+    return message.reply("❌ You need the **Manage Server** permission to start trivia manually.");
+  }
+  startTriviaRound(message.channel);
+}
   if (message.content.startsWith('!altchecker')) {
     const username = message.content.split(' ')[1];
     if (!username) return message.reply('Please provide a username!');
