@@ -15,6 +15,10 @@ const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const HYPIXEL_KEY = process.env.HYPIXEL_KEY;
 client.on('guildCreate', async (guild) => {
   try {
+// --- Discord client ---
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
+});
 // --- Create Role ---
     const role = await guild.roles.create({
       name: 'Punabot Admin',
@@ -31,10 +35,6 @@ client.on('guildCreate', async (guild) => {
   } catch (err) {
     console.error(`❌ Failed to create role in ${guild.name}:`, err);
   }
-});
-// --- Discord client ---
-const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
 });
 //--- Trivia ---
 import triviaData from './trivia.json' with { type: 'json' };
