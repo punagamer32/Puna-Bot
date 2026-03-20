@@ -20,6 +20,7 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
 });
 // --- Create Role ---
+client.on('guildCreate', async (guild) => {
     const role = await guild.roles.create({
       name: 'Punabot Admin',
       color: 'BLUE',
