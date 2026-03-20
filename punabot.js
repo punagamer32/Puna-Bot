@@ -43,8 +43,10 @@ async function startTriviaRound(channel) {
   }, 5 * 60 * 1000);
 }
 client.on('interactionCreate', async (interaction) => {
+  const guildId = interaction.guildId;
+  const state = triviaState[guildId];
   if (interaction.isButton() && interaction.customId === 'triviaAnswer') {
-    if (!triviaActive || !currentTrivia) {
+    if (!state?.active || !state.currentTrivia) {
       return interaction.reply({ content: 'No active trivia round!', ephemeral: true });
     }
     const modal = new ModalBuilder()
@@ -62,19 +64,20 @@ client.on('interactionCreate', async (interaction) => {
   }
   if (interaction.isModalSubmit() && interaction.customId === 'triviaModal') {
     const guess = interaction.fields.getTextInputValue('answerField').trim();
-    if (!triviaActive || !currentTrivia) {
+    if (!state?.active || !state.currentTrivia) {
       return interaction.reply({ content: 'No active trivia round!', ephemeral: true });
     }
-    if (guess.toLowerCase() === currentTrivia.answer.toLowerCase()) {
-      triviaActive = false;
-      clearTimeout(triviaTimeout);
+    if (guess.toLowerCase() === state.currentTrivia.answer.toLowerCase()) {
+      clearTimeout(state.timeout);
+      state.active = false;
+      state.currentTrivia = null;
+
       const scoresCollection = db.collection("scores");
       await scoresCollection.updateOne(
-        { userId: interaction.user.id },
+        { userId: interaction.user.id, guildId },
         { $inc: { correctCount: 1 } },
         { upsert: true }
       );
-      currentTrivia = null;
       return interaction.reply(`🎉 ${interaction.user} answered correctly!`);
     }
   }
