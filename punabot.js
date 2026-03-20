@@ -28,6 +28,10 @@ async function startTriviaRound(channel) {
   if (triviaActive) return;
   const triviaCollection = db.collection("trivia");
   const randomTrivia = await triviaCollection.aggregate([{ $sample: { size: 1 } }]).toArray();
+  if (!randomTrivia.length) {
+    channel.send("⚠️ No trivia questions available in the database.");
+    return;
+  }
   currentTrivia = randomTrivia[0];
   triviaActive = true;
   const button = new ButtonBuilder()
