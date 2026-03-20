@@ -20,6 +20,7 @@ const client = new Client({
 //--- Trivia ---
 import triviaData from './trivia.json' with { type: 'json' };
 let db;
+let settingsCollection;
 let currentTrivia = null;
 let triviaActive = false;
 let triviaTimeout = null;
