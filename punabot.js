@@ -13,37 +13,39 @@ if (!MONGO_URI) {
 const clientDB = new MongoClient(MONGO_URI);
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const HYPIXEL_KEY = process.env.HYPIXEL_KEY;
-client.on('guildCreate', async (guild) => {
-  try {
 // --- Discord client ---
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
 });
 // --- Create Role ---
 client.on('guildCreate', async (guild) => {
-  const role = await guild.roles.create({
-    name: 'Punabot Admin',
-    color: 'BLUE',
-    permissions: ['Administrator'], // full admin rights
-    reason: 'Auto-created admin role for Punabot'
-  });
-  console.log(`✅ Created role ${role.name} in guild ${guild.name}`);
-  const botMember = guild.members.me;
-  if (botMember) {
-    await botMember.roles.add(role);
-    console.log(`✅ Assigned ${role.name} to the bot in ${guild.name}`);
+  try {
+    let role = guild.roles.cache.find(r => r.name === 'Punabot Admin');
+    if (!role) {
+      role = await guild.roles.create({
+        name: 'Punabot Admin',
+        color: 'Blue',
+        permissions: ['Administrator'],
+        reason: 'Auto-created admin role for Punabot'
+      });
+      console.log(`✅ Created role ${role.name} in guild ${guild.name}`);
+    }
+    const botMember = guild.members.me;
+    if (botMember && !botMember.roles.cache.has(role.id)) {
+      await botMember.roles.add(role);
+      console.log(`✅ Assigned ${role.name} to the bot in ${guild.name}`);
+    }
+  } catch (err) {
+    console.error(`❌ Failed to create role in ${guild.name}:`, err);
   }
-} catch (err) {
-  console.error(`❌ Failed to create role in ${guild.name}:`, err);
-}
 });
-//--- Trivia ---
-import triviaData from './trivia.json' with { type: 'json' };
+// --- Globals ---
 let db;
 let settingsCollection;
 let currentTrivia = null;
 let triviaActive = false;
 let triviaTimeout = null;
+// --- Start Trivia Round ---
 async function startTriviaRound(channel) {
   if (triviaActive) return;
   const triviaCollection = db.collection("trivia");
