@@ -92,30 +92,34 @@ client.once('ready', async () => {
     activities: [{ name: '@punagamer32 On YouTube', type: ActivityType.Streaming, url: 'https://www.youtube.com/@punagamer32/live' }],
     status: 'online'
   });
-  try {
-    const settings = await settingsCollection.findOne({ guildId: client.guilds.cache.first().id });
-    if (settings?.botChannel) {
-      const channel = await client.channels.fetch(settings.botChannel);
-      if (channel) {
-        console.log("⚡ Starting trivia round immediately in", channel.name);
-        startTriviaRound(channel);
-      }
-    }
-  } catch (err) {
-    console.error("Startup trivia error:", err);
-  }
-  setInterval(async () => {
+  for (const [guildId, guild] of client.guilds.cache) {
     try {
-      const settings = await settingsCollection.findOne({ guildId: client.guilds.cache.first().id });
+      const settings = await settingsCollection.findOne({ guildId });
       if (settings?.botChannel) {
         const channel = await client.channels.fetch(settings.botChannel);
         if (channel) {
-          console.log("⚡ Starting trivia round in", channel.name);
+          console.log(`⚡ Starting trivia round immediately in ${guild.name} → ${channel.name}`);
           startTriviaRound(channel);
         }
       }
     } catch (err) {
-      console.error("Trivia interval error:", err);
+      console.error(`Startup trivia error in ${guild.name}:`, err);
+    }
+  }
+  setInterval(async () => {
+    for (const [guildId, guild] of client.guilds.cache) {
+      try {
+        const settings = await settingsCollection.findOne({ guildId });
+        if (settings?.botChannel) {
+          const channel = await client.channels.fetch(settings.botChannel);
+          if (channel) {
+            console.log(`⚡ Starting trivia round in ${guild.name} → ${channel.name}`);
+            startTriviaRound(channel);
+          }
+        }
+      } catch (err) {
+        console.error(`Trivia interval error in ${guild.name}:`, err);
+      }
     }
   }, 30 * 60 * 1000);
 });
