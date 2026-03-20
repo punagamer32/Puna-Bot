@@ -74,7 +74,6 @@ client.on('interactionCreate', async (interaction) => {
       clearTimeout(state.timeout);
       state.active = false;
       state.currentTrivia = null;
-
       const scoresCollection = db.collection("scores");
       await scoresCollection.updateOne(
         { userId: interaction.user.id, guildId },
