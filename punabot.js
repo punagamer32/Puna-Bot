@@ -141,9 +141,9 @@ client.on('messageCreate', async (message) => {
   }
   if (message.content === '!trivia') {
     const scoresCollection = db.collection("scores");
-    const userScore = await scoresCollection.findOne({ userId: message.author.id });
+    const userScore = await scoresCollection.findOne({ userId: message.author.id, guildId: message.guild.id });
     const score = userScore?.correctCount || 0;
-    return message.reply(`🏆 You have ${score} correct trivia answers!`);
+    return message.reply(`🏆 You have ${score} correct trivia answers in this server!`);
   }
   if (message.content === '!triviamanual') {
   if (!message.member.permissions.has('ManageGuild')) {
