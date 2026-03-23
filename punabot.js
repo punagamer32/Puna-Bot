@@ -250,6 +250,11 @@ if (message.channel.type === ChannelType.DM) {
       return message.reply(`📢 Current bot channel is <#${settings.botChannel}>.`);
     }
   }
+  if (message.content === '!status') {
+  const mongoStatus = db ? "✅ Connected" : "❌ Not connected";
+  const discordStatus = client.user ? `✅ Logged in as ${client.user.tag}` : "❌ Not logged in";
+  return message.reply(`📡 Status:\nDiscord: ${discordStatus}\nMongoDB: ${mongoStatus}`);
+}
 });
 // --- Render Ping ---
 console.log("Node.js version:", process.version)
@@ -278,8 +283,16 @@ async function startBot() {
       console.log("✅ Bot login attempt complete");
     } catch (err) {
       console.error("❌ Discord login failed:", err);
-      process.exit(1); // stop so you notice the error
-    }
+      process.exit(1);
+    client.on('error', (err) => {
+      console.error("❌ Discord client error:", err);
+    });
+    client.on('shardError', (err, shardId) => {
+      console.error(`❌ Shard ${shardId} error:`, err);
+    });
+    client.on('debug', (info) => {
+      console.log("🔎 Discord debug:", info);
+    });
     client.once('ready', async () => {
       console.log(`✅ Logged in as ${client.user.tag}`);
       client.user.setPresence({
