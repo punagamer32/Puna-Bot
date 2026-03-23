@@ -80,7 +80,7 @@ if (interaction.isModalSubmit() && interaction.customId === 'triviaModal') {
       state.currentTrivia = null;
       const scoresCollection = db.collection("scores");
       await scoresCollection.updateOne(
-        { userId: interaction.user.id, guildId },
+        { userId: interaction.user.id },
         { $inc: { correctCount: 1 } },
         { upsert: true }
       );
@@ -151,9 +151,9 @@ client.on('messageCreate', async (message) => {
   }
   if (message.content === '!trivia') {
     const scoresCollection = db.collection("scores");
-    const userScore = await scoresCollection.findOne({ userId: message.author.id, guildId: message.guild.id });
+    const userScore = await scoresCollection.findOne({ userId: message.author.id }); // no guildId
     const score = userScore?.correctCount || 0;
-    return message.reply(`🏆 You have ${score} correct trivia answers in this server!`);
+    return message.reply(`🏆 You have ${score} correct trivia answers!`);
   }
   if (message.content === '!triviamanual') {
   if (!message.member.permissions.has('ManageGuild')) {
