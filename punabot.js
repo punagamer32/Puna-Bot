@@ -4,7 +4,9 @@ import fetch from 'node-fetch';
 import express from 'express';
 import os from 'os';
 import { MongoClient } from "mongodb";
-import triviaData from './trivia.json' with { type: 'json' };
+import fs from 'fs';
+const jokes = JSON.parse(fs.readFileSync('./jokes.json', 'utf-8'));
+const triviaData = JSON.parse(fs.readFileSync('./trivia.json', 'utf-8'));
 // --- Constants ---
 const MONGO_URI = process.env.MONGO_URI;
 if (!MONGO_URI) {
@@ -93,8 +95,6 @@ if (interaction.isModalSubmit() && interaction.customId === 'triviaModal') {
     }
   }
 }
-// --- Jokes ---
-import jokes from './jokes.json' with { type: 'json' };
 // --- Health check server ---
 const app = express();
 const PORT = process.env.PORT || 8000;
