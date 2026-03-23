@@ -95,6 +95,7 @@ if (interaction.isModalSubmit() && interaction.customId === 'triviaModal') {
     }
   }
 }
+});
 // --- Health check server ---
 const app = express();
 const PORT = process.env.PORT || 8000;
