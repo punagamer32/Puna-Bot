@@ -317,3 +317,4 @@ async function startBot() {
     setTimeout(startBot, 10000);
   }
 }
+startBot();
