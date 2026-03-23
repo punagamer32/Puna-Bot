@@ -273,12 +273,21 @@ async function startBot() {
     db = clientDB.db("punabot");
     settingsCollection = db.collection("settings");
     console.log("✅ Connected to MongoDB");
-    await client.login(DISCORD_TOKEN);
-    console.log("✅ Bot login attempt complete");
+    try {
+      await client.login(DISCORD_TOKEN);
+      console.log("✅ Bot login attempt complete");
+    } catch (err) {
+      console.error("❌ Discord login failed:", err);
+      process.exit(1); // stop so you notice the error
+    }
     client.once('ready', async () => {
       console.log(`✅ Logged in as ${client.user.tag}`);
       client.user.setPresence({
-        activities: [{ name: '@punagamer32 On YouTube', type: ActivityType.Streaming, url: 'https://www.youtube.com/@punagamer32/live' }],
+        activities: [{ 
+          name: '@punagamer32 On YouTube', 
+          type: ActivityType.Streaming, 
+          url: 'https://www.youtube.com/@punagamer32/live' 
+        }],
         status: 'online'
       });
       for (const [guildId, guild] of client.guilds.cache) {
