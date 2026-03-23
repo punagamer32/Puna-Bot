@@ -41,7 +41,6 @@ async function startTriviaRound(channel) {
     .setCustomId('triviaAnswer')
     .setLabel('Answer Trivia')
     .setStyle(ButtonStyle.Primary);
-
   const row = new ActionRowBuilder().addComponents(button);
   channel.send({ content: `🧠 Trivia Time!\n${currentTrivia.question}`, components: [row] });
 }
@@ -65,7 +64,10 @@ client.on('interactionCreate', async (interaction) => {
       );
     await interaction.showModal(modal);
   }
-  if (interaction.isModalSubmit() && interaction.customId === 'triviaModal') {
+if (interaction.isModalSubmit() && interaction.customId === 'triviaModal') {
+  try {
+    const guildId = interaction.guildId;
+    const state = triviaState[guildId];
     const guess = interaction.fields.getTextInputValue('answerField').trim();
     if (!state?.active || !state.currentTrivia) {
       return interaction.reply({ content: 'No active trivia round!', ephemeral: true });
@@ -81,9 +83,16 @@ client.on('interactionCreate', async (interaction) => {
         { upsert: true }
       );
       return interaction.reply(`🎉 ${interaction.user} answered correctly!`);
+    } else {
+      return interaction.reply({ content: '❌ Incorrect answer!', ephemeral: true });
+    }
+  } catch (err) {
+    console.error("Trivia modal error:", err);
+    if (!interaction.replied && !interaction.deferred) {
+      return interaction.reply({ content: "⚠️ Something went wrong processing your answer.", ephemeral: true });
     }
   }
-});
+}
 // --- Jokes ---
 import jokes from './jokes.json' with { type: 'json' };
 // --- Health check server ---
