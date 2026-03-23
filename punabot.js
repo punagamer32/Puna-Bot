@@ -286,7 +286,7 @@ async function startBot() {
           const settings = await settingsCollection.findOne({ guildId });
           if (settings?.botChannel) {
             const channel = await client.channels.fetch(settings.botChannel);
-            if (channel) {
+            if (channel && channel.isTextBased()) {
               console.log(`⚡ Starting trivia round immediately in ${guild.name} → ${channel.name}`);
               startTriviaRound(channel);
             }
@@ -301,7 +301,7 @@ async function startBot() {
             const settings = await settingsCollection.findOne({ guildId });
             if (settings?.botChannel) {
               const channel = await client.channels.fetch(settings.botChannel);
-              if (channel) {
+              if (channel && channel.isTextBased()) {
                 console.log(`⚡ Starting trivia round in ${guild.name} → ${channel.name}`);
                 startTriviaRound(channel);
               }
