@@ -283,10 +283,10 @@ async function startBot() {
     client.once('ready', async () => {
       console.log(`✅ Logged in as ${client.user.tag}`);
       client.user.setPresence({
-        activities: [{ 
-          name: '@punagamer32 On YouTube', 
-          type: ActivityType.Streaming, 
-          url: 'https://www.youtube.com/@punagamer32/live' 
+        activities: [{
+          name: '@punagamer32 On YouTube',
+          type: ActivityType.Streaming,
+          url: 'https://www.youtube.com/@punagamer32/live'
         }],
         status: 'online'
       });
