@@ -278,12 +278,15 @@ async function startBot() {
     db = clientDB.db("punabot");
     settingsCollection = db.collection("settings");
     console.log("✅ Connected to MongoDB");
+    // Attempt Discord login
     try {
       await client.login(DISCORD_TOKEN);
       console.log("✅ Bot login attempt complete");
     } catch (err) {
       console.error("❌ Discord login failed:", err);
-      process.exit(1);
+      process.exit(1); // stop so you notice the error
+    }
+    // Extra listeners for visibility
     client.on('error', (err) => {
       console.error("❌ Discord client error:", err);
     });
