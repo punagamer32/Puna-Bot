@@ -101,43 +101,6 @@ const app = express();
 const PORT = process.env.PORT || 8000;
 app.get('/', (req, res) => res.send('Bot is running ✅'));
 app.listen(PORT, () => console.log(`Health check server on ${PORT}`));
-client.once('ready', async () => {
-  console.log(`✅ Logged in as ${client.user.tag}`);
-  client.user.setPresence({
-    activities: [{ name: '@punagamer32 On YouTube', type: ActivityType.Streaming, url: 'https://www.youtube.com/@punagamer32/live' }],
-    status: 'online'
-  });
-  for (const [guildId, guild] of client.guilds.cache) {
-    try {
-      const settings = await settingsCollection.findOne({ guildId });
-      if (settings?.botChannel) {
-        const channel = await client.channels.fetch(settings.botChannel);
-        if (channel) {
-          console.log(`⚡ Starting trivia round immediately in ${guild.name} → ${channel.name}`);
-          startTriviaRound(channel);
-        }
-      }
-    } catch (err) {
-      console.error(`Startup trivia error in ${guild.name}:`, err);
-    }
-  }
-  setInterval(async () => {
-    for (const [guildId, guild] of client.guilds.cache) {
-      try {
-        const settings = await settingsCollection.findOne({ guildId });
-        if (settings?.botChannel) {
-          const channel = await client.channels.fetch(settings.botChannel);
-          if (channel) {
-            console.log(`⚡ Starting trivia round in ${guild.name} → ${channel.name}`);
-            startTriviaRound(channel);
-          }
-        }
-      } catch (err) {
-        console.error(`Trivia interval error in ${guild.name}:`, err);
-      }
-    }
-  }, 30 * 60 * 1000);
-});
 // --- Unified message handler ---
 client.on('messageCreate', async (message) => {
   console.log(`[${message.author.tag}] (${message.channel.type}) ${message.content}`);
@@ -312,11 +275,45 @@ async function startBot() {
     console.log("✅ Connected to MongoDB");
     await client.login(DISCORD_TOKEN);
     console.log("✅ Bot login attempt complete");
+    client.once('ready', async () => {
+      console.log(`✅ Logged in as ${client.user.tag}`);
+      client.user.setPresence({
+        activities: [{ name: '@punagamer32 On YouTube', type: ActivityType.Streaming, url: 'https://www.youtube.com/@punagamer32/live' }],
+        status: 'online'
+      });
+      for (const [guildId, guild] of client.guilds.cache) {
+        try {
+          const settings = await settingsCollection.findOne({ guildId });
+          if (settings?.botChannel) {
+            const channel = await client.channels.fetch(settings.botChannel);
+            if (channel) {
+              console.log(`⚡ Starting trivia round immediately in ${guild.name} → ${channel.name}`);
+              startTriviaRound(channel);
+            }
+          }
+        } catch (err) {
+          console.error(`Startup trivia error in ${guild.name}:`, err);
+        }
+      }
+      setInterval(async () => {
+        for (const [guildId, guild] of client.guilds.cache) {
+          try {
+            const settings = await settingsCollection.findOne({ guildId });
+            if (settings?.botChannel) {
+              const channel = await client.channels.fetch(settings.botChannel);
+              if (channel) {
+                console.log(`⚡ Starting trivia round in ${guild.name} → ${channel.name}`);
+                startTriviaRound(channel);
+              }
+            }
+          } catch (err) {
+            console.error(`Trivia interval error in ${guild.name}:`, err);
+          }
+        }
+      }, 30 * 60 * 1000);
+    });
   } catch (err) {
     console.error("❌ Startup failed:", err);
     setTimeout(startBot, 10000);
   }
 }
-startBot();
-
-
