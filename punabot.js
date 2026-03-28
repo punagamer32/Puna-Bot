@@ -254,7 +254,74 @@ if (message.channel.type === ChannelType.DM) {
   const mongoStatus = db ? "✅ Connected" : "❌ Not connected";
   const discordStatus = client.user ? `✅ Logged in as ${client.user.tag}` : "❌ Not logged in";
   return message.reply(`📡 Status:\nDiscord: ${discordStatus}\nMongoDB: ${mongoStatus}`);
-}
+  }
+  if (message.author.bot) return;
+  if (message.content.startsWith('!gd')) {
+    const player = message.content.split(' ')[1];
+    if (!player) return message.reply('❌ Please provide a player name.');
+    try {
+      const res = await fetch(`https://gdbrowser.com/api/profile/${encodeURIComponent(player)}`);
+      const data = await res.json();
+      if (!data || data.error) return message.reply(`⚠️ Could not find stats for ${player}.`);
+      const baseStats = `⭐ Stars: ${data.stars}\n🌙 Moons: ${data.moons}\n🔑 Secret Coins: ${data.secretCoins}\n💰 User Coins: ${data.coins}\n👹 Demons: ${data.demons}`;
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`gd_normal_${player}`)
+          .setLabel('Normal Levels')
+          .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
+          .setCustomId(`gd_demons_${player}`)
+          .setLabel('Demons')
+          .setStyle(ButtonStyle.Danger)
+      );
+      return message.channel.send({ content: `📊 Stats for **${player}**\n${baseStats}`, components: [row] });
+    } catch (err) {
+      console.error(err);
+      return message.reply('⚠️ Error fetching GD stats.');
+    }
+  }
+});
+client.on('interactionCreate', async (interaction) => {
+  if (!interaction.isButton()) return;
+  const [prefix, type, player] = interaction.customId.split('_');
+  if (prefix !== 'gd') return;
+  try {
+    const res = await fetch(`https://gdbrowser.com/api/profile/${encodeURIComponent(player)}`);
+    const data = await res.json();
+    if (type === 'normal') {
+      await interaction.reply({ content: `📜 Normal Levels for **${player}**:\nEasy: ${data.easy}\nNormal: ${data.normal}\nHard: ${data.hard}\nHarder: ${data.harder}\nInsane: ${data.insane}`, ephemeral: true });
+    } else if (type === 'demons') {
+      await interaction.reply({ content: `👹 Demon Levels for **${player}**:\nEasy Demon: ${data.easyDemons}\nMedium Demon: ${data.mediumDemons}\nHard Demon: ${data.hardDemons}\nInsane Demon: ${data.insaneDemons}\nExtreme Demon: ${data.extremeDemons}`, ephemeral: true });
+    }
+  } catch (err) {
+    console.error(err);
+    await interaction.reply({ content: '⚠️ Error fetching GD stats.', ephemeral: true });
+  }
+});
+client.on('messageCreate', async (message) => {
+  if (message.content.startsWith('!level')) {
+    const args = message.content.split(' ');
+    const levelId = args[1];
+    const subCommand = args[2];
+    const player = args[3];
+    if (!levelId) return message.reply('❌ Please provide a level ID.');
+    try {
+      if (subCommand === 'playerstats' && player) {
+        const res = await fetch(`https://gdbrowser.com/api/level/${levelId}`);
+        const levelData = await res.json();
+        return message.reply(`📊 Stats for **${player}** on level ${levelData.name} (ID: ${levelId})\nAttempts: TBD\nCompletion: TBD`);
+      }
+      if (subCommand === 'leaderboard') {
+        const res = await fetch(`https://gdbrowser.com/api/leaderboard/${levelId}`);
+        const lbData = await res.json();
+        let leaderboard = lbData.map((entry, i) => `${i + 1}. ${entry.username} – ${entry.percent}%`).join('\n');
+        return message.reply(`🏆 Leaderboard for level ${levelId}:\n${leaderboard}`);
+      }
+    } catch (err) {
+      console.error(err);
+      return message.reply('⚠️ Error fetching level data.');
+    }
+  }
 });
 // --- Render Ping ---
 console.log("Node.js version:", process.version)
@@ -278,15 +345,13 @@ async function startBot() {
     db = clientDB.db("punabot");
     settingsCollection = db.collection("settings");
     console.log("✅ Connected to MongoDB");
-    // Attempt Discord login
     try {
       await client.login(DISCORD_TOKEN);
       console.log("✅ Bot login attempt complete");
     } catch (err) {
       console.error("❌ Discord login failed:", err);
-      process.exit(1); // stop so you notice the error
+      process.exit(1);
     }
-    // Extra listeners for visibility
     client.on('error', (err) => {
       console.error("❌ Discord client error:", err);
     });
