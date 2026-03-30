@@ -64,7 +64,7 @@ client.on('interactionCreate', async (interaction) => {
             .setStyle(TextInputStyle.Short)
         )
       );
-    await interaction.showModal(modal);
+    return interaction.showModal(modal);
   }
 if (interaction.isModalSubmit() && interaction.customId === 'triviaModal') {
   try {
@@ -285,17 +285,23 @@ client.on('interactionCreate', async (interaction) => {
   if (!interaction.isButton()) return;
   const [prefix, type, player] = interaction.customId.split('_');
   if (prefix !== 'gd') return;
+  await interaction.deferReply();
   try {
     const res = await fetch(`https://gdbrowser.com/api/profile/${encodeURIComponent(player)}`);
     const data = await res.json();
+
     if (type === 'normal') {
-      await interaction.reply({ content: `📜 Normal Levels for **${player}**:\nEasy: ${data.easy}\nNormal: ${data.normal}\nHard: ${data.hard}\nHarder: ${data.harder}\nInsane: ${data.insane}`, ephemeral: true });
+      await interaction.editReply({
+        content: `📜 Normal Levels for **${player}**:\n⭐ Stars: ${data.stars}\n🌙 Moons: ${data.moons}\n💰 User Coins: ${data.userCoins}\n👹 Demons: ${data.demons}`
+      });
     } else if (type === 'demons') {
-      await interaction.reply({ content: `👹 Demon Levels for **${player}**:\nEasy Demon: ${data.easyDemons}\nMedium Demon: ${data.mediumDemons}\nHard Demon: ${data.hardDemons}\nInsane Demon: ${data.insaneDemons}\nExtreme Demon: ${data.extremeDemons}`, ephemeral: true });
+      await interaction.editReply({
+        content: `👹 Demon Stats for **${player}**:\nTotal Demons: ${data.demons}`
+      });
     }
   } catch (err) {
     console.error(err);
-    await interaction.reply({ content: '⚠️ Error fetching GD stats.', ephemeral: true });
+    await interaction.editReply({ content: '⚠️ Error fetching GD stats.' });
   }
 });
 client.on('messageCreate', async (message) => {
