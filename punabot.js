@@ -264,79 +264,12 @@ if (message.channel.type === ChannelType.DM) {
       const data = await res.json();
       if (!data || data.error) return message.reply(`⚠️ Could not find stats for ${player}.`);
       const baseStats = `⭐ Stars: ${data.stars}\n🌙 Moons: ${data.moons}\n🔑 Secret Coins: ${data.coins}\n💰 User Coins: ${data.userCoins}\n👹 Demons: ${data.demons}`;
-      const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId(`gd_normal_${player}`)
-          .setLabel('Level Stats')
-          .setStyle(ButtonStyle.Primary),
-        new ButtonBuilder()
-          .setCustomId(`gd_demons_${player}`)
-          .setLabel('Demons')
-          .setStyle(ButtonStyle.Danger)
-      );
       return message.channel.send({ content: `📊 Stats for **${player}**\n${baseStats}`, components: [row] });
     } catch (err) {
       console.error(err);
       return message.reply('⚠️ Error fetching GD stats.');
     }
   }
-});
-async function fetchDifficultyCount(player, difficulty, platformer=false) {
-  const res = await fetch(`https://gdbrowser.com/api/search/${encodeURIComponent(player)}?difficulty=${difficulty}${platformer ? "&platformer=true" : ""}`);
-  const levels = await res.json();
-  return levels.length;
-}
-    client.on('interactionCreate', async (interaction) => {
-      if (!interaction.isButton()) return;
-      const [prefix, type, player] = interaction.customId.split('_');
-      if (prefix !== 'gd') return;
-      await interaction.deferReply();
-      try {
-        const res = await fetch(`https://gdbrowser.com/api/profile/${encodeURIComponent(player)}`);
-        const data = await res.json();
-    if (type === 'levels') {
-      const autoClassic = await fetchDifficultyCount(player, "auto");
-      const autoPlatformer = await fetchDifficultyCount(player, "auto", true);
-      const easyClassic = await fetchDifficultyCount(player, "easy");
-      const easyPlatformer = await fetchDifficultyCount(player, "easy", true);
-      const normalClassic = await fetchDifficultyCount(player, "normal");
-      const normalPlatformer = await fetchDifficultyCount(player, "normal", true);
-      const hardClassic = await fetchDifficultyCount(player, "hard");
-      const hardPlatformer = await fetchDifficultyCount(player, "hard", true);
-      const harderClassic = await fetchDifficultyCount(player, "harder");
-      const harderPlatformer = await fetchDifficultyCount(player, "harder", true);
-      const insaneClassic = await fetchDifficultyCount(player, "insane");
-      const insanePlatformer = await fetchDifficultyCount(player, "insane", true);
-      await interaction.editReply({
-        content: `📜 Level Stats for **${player}**:
-    Classic → Auto: ${autoClassic}, Easy: ${easyClassic}, Normal: ${normalClassic}, Hard: ${hardClassic}, Harder: ${harderClassic}, Insane: ${insaneClassic}
-    Platformer → Auto: ${autoPlatformer}, Easy: ${easyPlatformer}, Normal: ${normalPlatformer}, Hard: ${hardPlatformer}, Harder: ${harderPlatformer}, Insane: ${insanePlatformer}`
-      });
-    }
-    if (type === 'demons') {
-      const easyDemonClassic = await fetchDifficultyCount(player, "easy demon");
-      const easyDemonPlatformer = await fetchDifficultyCount(player, "easy demon", true);
-      const mediumDemonClassic = await fetchDifficultyCount(player, "medium demon");
-      const mediumDemonPlatformer = await fetchDifficultyCount(player, "medium demon", true);
-      const hardDemonClassic = await fetchDifficultyCount(player, "hard demon");
-      const hardDemonPlatformer = await fetchDifficultyCount(player, "hard demon", true);
-      const insaneDemonClassic = await fetchDifficultyCount(player, "insane demon");
-      const insaneDemonPlatformer = await fetchDifficultyCount(player, "insane demon", true);
-      const extremeDemonClassic = await fetchDifficultyCount(player, "extreme demon");
-      const extremeDemonPlatformer = await fetchDifficultyCount(player, "extreme demon", true);
-    
-      await interaction.editReply({
-        content: `👹 Demon Stats for **${player}**:
-    Classic → Easy: ${easyDemonClassic}, Medium: ${mediumDemonClassic}, Hard: ${hardDemonClassic}, Insane: ${insaneDemonClassic}, Extreme: ${extremeDemonClassic}
-    Platformer → Easy: ${easyDemonPlatformer}, Medium: ${mediumDemonPlatformer}, Hard: ${hardDemonPlatformer}, Insane: ${insaneDemonPlatformer}, Extreme: ${extremeDemonPlatformer}`
-      });
-    }
-  } catch (err) {
-    console.error(err);
-    await interaction.editReply({ content: '⚠️ Error fetching GD stats.' });
-  }
-});
-client.on('messageCreate', async (message) => {
   if (message.content.startsWith('!level')) {
     const args = message.content.split(' ');
     const levelId = args[1];
