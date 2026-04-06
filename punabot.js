@@ -263,11 +263,11 @@ if (message.channel.type === ChannelType.DM) {
       const res = await fetch(`https://gdbrowser.com/api/profile/${encodeURIComponent(player)}`);
       const data = await res.json();
       if (!data || data.error) return message.reply(`⚠️ Could not find stats for ${player}.`);
-      const baseStats = `⭐ Stars: ${data.stars}\n🌙 Moons: ${data.moons}\n🔑 Secret Coins: ${data.secretCoins}\n💰 User Coins: ${data.coins}\n👹 Demons: ${data.demons}`;
+      const baseStats = `⭐ Stars: ${data.stars}\n🌙 Moons: ${data.moons}\n🔑 Secret Coins: ${data.Coins}\n💰 User Coins: ${data.coins}\n👹 Demons: ${data.demons}`;
       const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId(`gd_normal_${player}`)
-          .setLabel('Normal Levels')
+          .setLabel('Level Stats')
           .setStyle(ButtonStyle.Primary),
         new ButtonBuilder()
           .setCustomId(`gd_demons_${player}`)
@@ -281,22 +281,42 @@ if (message.channel.type === ChannelType.DM) {
     }
   }
 });
-client.on('interactionCreate', async (interaction) => {
-  if (!interaction.isButton()) return;
-  const [prefix, type, player] = interaction.customId.split('_');
-  if (prefix !== 'gd') return;
-  await interaction.deferReply();
-  try {
-    const res = await fetch(`https://gdbrowser.com/api/profile/${encodeURIComponent(player)}`);
-    const data = await res.json();
-
-    if (type === 'normal') {
+async function fetchDifficultyCount(player, difficulty, platformer=false) {
+  const res = await fetch(`https://gdbrowser.com/api/search/${encodeURIComponent(player)}?difficulty=${difficulty}${platformer ? "&platformer=true" : ""}`);
+  const levels = await res.json();
+  return levels.length;
+}
+    client.on('interactionCreate', async (interaction) => {
+      if (!interaction.isButton()) return;
+      const [prefix, type, player] = interaction.customId.split('_');
+      if (prefix !== 'gd') return;
+      await interaction.deferReply();
+      try {
+        const res = await fetch(`https://gdbrowser.com/api/profile/${encodeURIComponent(player)}`);
+        const data = await res.json();
+    if (type === 'levels') {
+      const autoClassic = await fetchDifficultyCount(player, "auto");
+      const autoPlatformer = await fetchDifficultyCount(player, "auto", true);
+      const easyClassic = await fetchDifficultyCount(player, "easy");
+      const easyPlatformer = await fetchDifficultyCount(player, "easy", true);
+      // … repeat for Normal, Hard, Harder, Insane
+    
       await interaction.editReply({
-        content: `📜 Normal Levels for **${player}**:\n⭐ Stars: ${data.stars}\n🌙 Moons: ${data.moons}\n💰 User Coins: ${data.userCoins}\n👹 Demons: ${data.demons}`
+        content: `📜 Level Stats for **${player}**:
+    Classic → Auto: ${autoClassic}, Easy: ${easyClassic}, Normal: ${normalClassic}, Hard: ${hardClassic}, Harder: ${harderClassic}, Insane: ${insaneClassic}
+    Platformer → Auto: ${autoPlatformer}, Easy: ${easyPlatformer}, Normal: ${normalPlatformer}, Hard: ${hardPlatformer}, Harder: ${harderPlatformer}, Insane: ${insanePlatformer}`
       });
-    } else if (type === 'demons') {
+    }
+    if (type === 'demons') {
+      const easyDemonClassic = await fetchDifficultyCount(player, "easy demon");
+      const easyDemonPlatformer = await fetchDifficultyCount(player, "easy demon", true);
+      const mediumDemonClassic = await fetchDifficultyCount(player, "medium demon");
+      const mediumDemonPlatformer = await fetchDifficultyCount(player, "medium demon", true);
+      // … repeat for Hard, Insane, Extreme Demon
       await interaction.editReply({
-        content: `👹 Demon Stats for **${player}**:\nTotal Demons: ${data.demons}`
+        content: `👹 Demon Stats for **${player}**:
+    Classic → Easy: ${easyDemonClassic}, Medium: ${mediumDemonClassic}, Hard: ${hardDemonClassic}, Insane: ${insaneDemonClassic}, Extreme: ${extremeDemonClassic}
+    Platformer → Easy: ${easyDemonPlatformer}, Medium: ${mediumDemonPlatformer}, Hard: ${hardDemonPlatformer}, Insane: ${insaneDemonPlatformer}, Extreme: ${extremeDemonPlatformer}`
       });
     }
   } catch (err) {
