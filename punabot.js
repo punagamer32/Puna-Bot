@@ -255,44 +255,6 @@ if (message.channel.type === ChannelType.DM) {
   const discordStatus = client.user ? `✅ Logged in as ${client.user.tag}` : "❌ Not logged in";
   return message.reply(`📡 Status:\nDiscord: ${discordStatus}\nMongoDB: ${mongoStatus}`);
   }
-  if (message.author.bot) return;
-  if (message.content.startsWith('!gd')) {
-    const player = message.content.split(' ')[1];
-    if (!player) return message.reply('❌ Please provide a player name.');
-    try {
-      const res = await fetch(`https://gdbrowser.com/api/profile/${encodeURIComponent(player)}`);
-      const data = await res.json();
-      if (!data || data.error) return message.reply(`⚠️ Could not find stats for ${player}.`);
-      const baseStats = `⭐ Stars: ${data.stars}\n🌙 Moons: ${data.moons}\n🔑 Secret Coins: ${data.coins}\n💰 User Coins: ${data.userCoins}\n👹 Demons: ${data.demons}`;
-      return message.channel.send({ content: `📊 Stats for **${player}**\n${baseStats}`, components: [row] });
-    } catch (err) {
-      console.error(err);
-      return message.reply('⚠️ Error fetching GD stats.');
-    }
-  }
-  if (message.content.startsWith('!level')) {
-    const args = message.content.split(' ');
-    const levelId = args[1];
-    const subCommand = args[2];
-    const player = args[3];
-    if (!levelId) return message.reply('❌ Please provide a level ID.');
-    try {
-      if (subCommand === 'playerstats' && player) {
-        const res = await fetch(`https://gdbrowser.com/api/level/${levelId}`);
-        const levelData = await res.json();
-        return message.reply(`📊 Stats for **${player}** on level ${levelData.name} (ID: ${levelId})\nAttempts: TBD\nCompletion: TBD`);
-      }
-      if (subCommand === 'leaderboard') {
-        const res = await fetch(`https://gdbrowser.com/api/leaderboard/${levelId}`);
-        const lbData = await res.json();
-        let leaderboard = lbData.map((entry, i) => `${i + 1}. ${entry.username} – ${entry.percent}%`).join('\n');
-        return message.reply(`🏆 Leaderboard for level ${levelId}:\n${leaderboard}`);
-      }
-    } catch (err) {
-      console.error(err);
-      return message.reply('⚠️ Error fetching level data.');
-    }
-  }
 });
 // --- Render Ping ---
 console.log("Node.js version:", process.version)
