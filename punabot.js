@@ -372,7 +372,6 @@ async function rerollGiveaway(id, channel) {
   await giveaways.updateOne({ giveaway_id: id }, { $set: { winner: winners } });
   channel.send(`🔄 Giveaway ${id} rerolled!\nNew Winners: ${winners.map(w => `<@${w}>`).join(", ")}`);
 }
-});
 // --- Render Ping ---
 console.log("Node.js version:", process.version)
 setInterval(async () => {
