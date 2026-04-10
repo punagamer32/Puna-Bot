@@ -304,8 +304,14 @@ if (message.channel.type === ChannelType.DM) {
       content: `🎉 **Giveaway Started!**\nPrize: ${prize}\nDuration: ${duration}\nWinners: ${winners}\nExtra: ${extra.join(" ")}\nCreator: ${message.author}\nID: ${giveawayId}`,
       components: [row]
     });
-    setTimeout(() => endGiveaway(giveawayId), durationMs);
-  }
+    setTimeout(async () => {
+      try {
+        const channel = await client.channels.fetch(message.channel.id);
+        endGiveaway(giveawayId, channel);
+      } catch (err) {
+        console.error("Error ending giveaway:", err);
+      }
+    }, durationMs);
   if (cmd === "!giveaway" && args[0] === "end") {
     const id = args[1];
     if (!id) return message.reply("❌ Provide giveaway ID.");
