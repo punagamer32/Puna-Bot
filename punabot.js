@@ -2,9 +2,11 @@
 import { Client, GatewayIntentBits, ActivityType, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle, ChannelType } from 'discord.js';
 import fetch from 'node-fetch';
 import express from 'express';
+import ms from "ms";
 import os from 'os';
 import { MongoClient } from "mongodb";
 import fs from 'fs';
+import crypto from "crypto";
 const jokes = JSON.parse(fs.readFileSync('./jokes.json', 'utf-8'));
 const triviaData = JSON.parse(fs.readFileSync('./trivia.json', 'utf-8'));
 // --- Constants ---
@@ -22,6 +24,7 @@ const client = new Client({
 });
 // --- Globals ---
 let db;
+let giveawayRoles;
 let settingsCollection;
 const triviaState = {};
 // --- Start Trivia Round ---
@@ -255,6 +258,120 @@ if (message.channel.type === ChannelType.DM) {
   const discordStatus = client.user ? `✅ Logged in as ${client.user.tag}` : "❌ Not logged in";
   return message.reply(`📡 Status:\nDiscord: ${discordStatus}\nMongoDB: ${mongoStatus}`);
   }
+  if (message.author.bot) return;
+  const args = message.content.split(" ");
+  const cmd = args.shift().toLowerCase();
+  if (cmd === "!giveaway" && args[0] === "roles") {
+    const role = message.mentions.roles.first();
+    if (!role) return message.reply("❌ Mention a role.");
+    const existing = await giveawayRoles.findOne({ guildId: message.guild.id, roleId: role.id });
+    if (existing) {
+      await giveawayRoles.deleteOne({ guildId: message.guild.id, roleId: role.id });
+      return message.reply(`🔄 Removed ${role} from giveaway managers.`);
+    } else {
+      await giveawayRoles.insertOne({ guildId: message.guild.id, roleId: role.id });
+      return message.reply(`✅ Added ${role} as giveaway manager.`);
+    }
+  }
+  if (cmd === "!giveaway" && args[0] === "create") {
+    const [prize, duration, winners, ...extra] = args.slice(1);
+    if (!prize || !duration || !winners) return message.reply("❌ Usage: !giveaway create {prize} {duration} {winners} {extra info}");
+    const allowedRoles = await giveawayRoles.find({ guildId: message.guild.id }).toArray();
+    const hasRole = allowedRoles.some(r => message.member.roles.cache.has(r.roleId));
+    if (!message.member.permissions.has("ManageGuild") && !hasRole) {
+      return message.reply("❌ You don’t have permission to create giveaways.");
+    }
+    const giveawayId = crypto.randomBytes(4).toString("hex");
+    const durationMs = ms(duration);
+    const endTime = Date.now() + durationMs;
+    const giveaway = {
+      giveaway_id: giveawayId,
+      giveaway_channel: message.channel.id,
+      users: [],
+      prize,
+      duration,
+      creator: message.author.id,
+      winners: parseInt(winners),
+      winner: null,
+      extra: extra.join(" "),
+      endTime
+    };
+    await db.collection("giveaways").insertOne(giveaway);
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId(`enter_${giveawayId}`).setLabel("Enter Giveaway").setStyle(ButtonStyle.Success)
+    );
+    message.channel.send({
+      content: `🎉 **Giveaway Started!**\nPrize: ${prize}\nDuration: ${duration}\nWinners: ${winners}\nExtra: ${extra.join(" ")}\nCreator: ${message.author}\nID: ${giveawayId}`,
+      components: [row]
+    });
+    setTimeout(() => endGiveaway(giveawayId), durationMs);
+  }
+  if (cmd === "!giveaway" && args[0] === "end") {
+    const id = args[1];
+    if (!id) return message.reply("❌ Provide giveaway ID.");
+    await endGiveaway(id, message.channel);
+  }
+  if (cmd === "!giveaway" && args[0] === "cancel") {
+    const id = args[1];
+    await db.collection("giveaways").deleteOne({ giveaway_id: id });
+    return message.reply(`❌ Giveaway ${id} cancelled.`);
+  }
+  if (cmd === "!giveaway" && args[0] === "reroll") {
+    const id = args[1];
+    await rerollGiveaway(id, message.channel);
+  }
+});
+client.on("interactionCreate", async (interaction) => {
+  if (!interaction.isButton()) return;
+  const [action, id] = interaction.customId.split("_");
+  const giveaways = db.collection("giveaways");
+  const giveaway = await giveaways.findOne({ giveaway_id: id });
+  if (!giveaway) return interaction.reply({ content: "⚠️ Giveaway not found.", ephemeral: true });
+  if (action === "enter") {
+    if (giveaway.users.includes(interaction.user.id)) {
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(`leave_${id}`).setLabel("Leave Giveaway").setStyle(ButtonStyle.Danger)
+      );
+      return interaction.reply({ content: "❌ You have already entered this giveaway.", ephemeral: true, components: [row] });
+    }
+    giveaway.users.push(interaction.user.id);
+    await giveaways.updateOne({ giveaway_id: id }, { $set: { users: giveaway.users } });
+    return interaction.reply({ content: "✅ You have successfully entered the giveaway.", ephemeral: true });
+  }
+  if (action === "leave") {
+    giveaway.users = giveaway.users.filter(u => u !== interaction.user.id);
+    await giveaways.updateOne({ giveaway_id: id }, { $set: { users: giveaway.users } });
+    return interaction.reply({ content: "🚪 You have left the giveaway.", ephemeral: true });
+  }
+});
+async function endGiveaway(id, channel=null) {
+  const giveaways = db.collection("giveaways");
+  const giveaway = await giveaways.findOne({ giveaway_id: id });
+  if (!giveaway) return;
+  if (giveaway.users.length === 0) {
+    return channel?.send(`⚠️ Giveaway ${id} ended with no entries.`);
+  }
+  const winners = [];
+  for (let i = 0; i < giveaway.winners; i++) {
+    const winner = giveaway.users[Math.floor(Math.random() * giveaway.users.length)];
+    if (!winners.includes(winner)) winners.push(winner);
+  }
+  await giveaways.updateOne({ giveaway_id: id }, { $set: { winner: winners } });
+  channel?.send(`🎉 Giveaway ${id} ended!\nPrize: ${giveaway.prize}\nWinners: ${winners.map(w => `<@${w}>`).join(", ")}`);
+}
+async function rerollGiveaway(id, channel) {
+  const giveaways = db.collection("giveaways");
+  const giveaway = await giveaways.findOne({ giveaway_id: id });
+  if (!giveaway) return;
+  if (giveaway.users.length === 0) return channel.send(`⚠️ No entries to reroll.`);
+  const winners = [];
+  for (let i = 0; i < giveaway.winners; i++) {
+    const winner = giveaway.users[Math.floor(Math.random() * giveaway.users.length)];
+    if (!winners.includes(winner)) winners.push(winner);
+  }
+  await giveaways.updateOne({ giveaway_id: id }, { $set: { winner: winners } });
+  channel.send(`🔄 Giveaway ${id} rerolled!\nNew Winners: ${winners.map(w => `<@${w}>`).join(", ")}`);
+}
 });
 // --- Render Ping ---
 console.log("Node.js version:", process.version)
@@ -276,6 +393,7 @@ async function startBot() {
     console.log("Connecting with URI:", MONGO_URI);
     await clientDB.connect();
     db = clientDB.db("punabot");
+    giveawayRoles = db.collection("giveawayRoles");
     settingsCollection = db.collection("settings");
     console.log("✅ Connected to MongoDB");
     try {
