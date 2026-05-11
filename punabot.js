@@ -313,6 +313,7 @@ if (message.channel.type === ChannelType.DM) {
         console.error("Error ending giveaway:", err);
       }
     }, durationMs);
+  }
   if (cmd === "!giveaway" && args[0] === "end") {
     const id = args[1];
     if (!id) return message.reply("❌ Provide giveaway ID.");
