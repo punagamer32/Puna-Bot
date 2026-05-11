@@ -380,7 +380,7 @@ async function rerollGiveaway(id, channel) {
   channel.send(`🔄 Giveaway ${id} rerolled!\nNew Winners: ${winners.map(w => `<@${w}>`).join(", ")}`);
 }
 setInterval(async () => {
-  const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000; // 7 days in ms
+  const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
   try {
     const result = await db.collection("giveaways").deleteMany({ createdAt: { $lt: cutoff } });
     if (result.deletedCount > 0) {
@@ -389,15 +389,7 @@ setInterval(async () => {
   } catch (err) {
     console.error("Error cleaning up giveaways:", err);
   }
-}, 24 * 60 * 60 * 1000); // run once per day
-setTimeout(async () => {
-  try {
-    const channel = await client.channels.fetch(message.channel.id);
-    endGiveaway(giveawayId, channel);
-  } catch (err) {
-    console.error("Error ending giveaway:", err);
-  }
-}, durationMs);
+}, 24 * 60 * 60 * 1000);
 // --- Render Ping ---
 console.log("Node.js version:", process.version)
 setInterval(async () => {
