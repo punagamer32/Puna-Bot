@@ -299,10 +299,17 @@ if (message.channel.type === ChannelType.DM) {
     };
     await db.collection("giveaways").insertOne(giveaway);
     const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId(`enter_${giveawayId}`).setLabel("Enter Giveaway").setStyle(ButtonStyle.Success)
+      new ButtonBuilder()
+        .setCustomId(`enter_${giveawayId}`)
+        .setLabel("Enter Giveaway")
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
+        .setCustomId(`participants_${giveawayId}`)
+        .setLabel("Participants")
+        .setStyle(ButtonStyle.Secondary)
     );
     message.channel.send({
-      content: `🎉 **Giveaway Started!**\nPrize: ${prize}\nDuration: ${duration}\nWinners: ${winners}\nExtra: ${extra.join(" ")}\nCreator: ${message.author}\nID: ${giveawayId}`,
+      content: `🎉 **Giveaway Started!**\nPrize: ${prize}\nDuration: ${duration}\nWinners: ${winners}\nInformation: ${extra.join(" ")}\nCreator: ${message.author}\nID: ${giveawayId}`,
       components: [row]
     });
     setTimeout(async () => {
@@ -331,25 +338,40 @@ if (message.channel.type === ChannelType.DM) {
 });
 client.on("interactionCreate", async (interaction) => {
   if (!interaction.isButton()) return;
-  const [action, id] = interaction.customId.split("_");
-  const giveaways = db.collection("giveaways");
-  const giveaway = await giveaways.findOne({ giveaway_id: id });
-  if (!giveaway) return interaction.reply({ content: "⚠️ Giveaway not found.", ephemeral: true });
-  if (action === "enter") {
-    if (giveaway.users.includes(interaction.user.id)) {
-      const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`leave_${id}`).setLabel("Leave Giveaway").setStyle(ButtonStyle.Danger)
-      );
-      return interaction.reply({ content: "❌ You have already entered this giveaway.", ephemeral: true, components: [row] });
-    }
-    giveaway.users.push(interaction.user.id);
-    await giveaways.updateOne({ giveaway_id: id }, { $set: { users: giveaway.users } });
-    return interaction.reply({ content: "✅ You have successfully entered the giveaway.", ephemeral: true });
+  if (interaction.customId === "triviaAnswer") {
+    return;
   }
-  if (action === "leave") {
-    giveaway.users = giveaway.users.filter(u => u !== interaction.user.id);
-    await giveaways.updateOne({ giveaway_id: id }, { $set: { users: giveaway.users } });
-    return interaction.reply({ content: "🚪 You have left the giveaway.", ephemeral: true });
+  if (interaction.customId.startsWith("enter_") || 
+      interaction.customId.startsWith("leave_") || 
+      interaction.customId.startsWith("participants_")) {
+    const [action, id] = interaction.customId.split("_");
+    const giveaways = db.collection("giveaways");
+    const giveaway = await giveaways.findOne({ giveaway_id: id });
+    if (!giveaway) return interaction.reply({ content: "⚠️ Giveaway not found.", ephemeral: true });
+    if (action === "enter") {
+      if (giveaway.users.includes(interaction.user.id)) {
+        const row = new ActionRowBuilder().addComponents(
+          new ButtonBuilder().setCustomId(`leave_${id}`).setLabel("Leave Giveaway").setStyle(ButtonStyle.Danger)
+        );
+        return interaction.reply({ content: "❌ You have already entered this giveaway.", ephemeral: true, components: [row] });
+      }
+      giveaway.users.push(interaction.user.id);
+      await giveaways.updateOne({ giveaway_id: id }, { $set: { users: giveaway.users } });
+      return interaction.reply({ content: "✅ You have successfully entered the giveaway.", ephemeral: true });
+    }
+    if (action === "leave") {
+      giveaway.users = giveaway.users.filter(u => u !== interaction.user.id);
+      await giveaways.updateOne({ giveaway_id: id }, { $set: { users: giveaway.users } });
+      return interaction.reply({ content: "🚪 You have left the giveaway.", ephemeral: true });
+    }
+    if (action === "participants") {
+      const total = giveaway.users.length;
+      const list = giveaway.users.map(u => `<@${u}>`).join(", ") || "No participants yet.";
+      return interaction.reply({ 
+        content: `👥 Participants in Giveaway ${id}\nTotal Entries: ${total}\n${list}`, 
+        ephemeral: true 
+      });
+    }
   }
 });
 async function endGiveaway(id, channel=null) {
