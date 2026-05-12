@@ -339,21 +339,44 @@ if (message.channel.type === ChannelType.DM) {
 client.on("interactionCreate", async (interaction) => {
   if (!interaction.isButton()) return;
   if (interaction.customId === "triviaAnswer") {
-    return;
+    // existing trivia modal logic
+    const modal = new ModalBuilder()
+      .setCustomId("triviaModal")
+      .setTitle("Trivia Answer")
+      .addComponents(
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId("answerField")
+            .setLabel("Your Answer")
+            .setStyle(TextInputStyle.Short)
+        )
+      );
+    return interaction.showModal(modal);
   }
-  if (interaction.customId.startsWith("enter_") || 
-      interaction.customId.startsWith("leave_") || 
-      interaction.customId.startsWith("participants_")) {
+  if (
+    interaction.customId.startsWith("enter_") ||
+    interaction.customId.startsWith("leave_") ||
+    interaction.customId.startsWith("participants_")
+  ) {
     const [action, id] = interaction.customId.split("_");
     const giveaways = db.collection("giveaways");
     const giveaway = await giveaways.findOne({ giveaway_id: id });
-    if (!giveaway) return interaction.reply({ content: "⚠️ Giveaway not found.", ephemeral: true });
+    if (!giveaway) {
+      return interaction.reply({ content: "⚠️ Giveaway not found.", ephemeral: true });
+    }
+    if (Date.now() > giveaway.endTime) {
+      return interaction.reply({ content: "⏰ This giveaway has already ended!", ephemeral: true });
+    }
     if (action === "enter") {
       if (giveaway.users.includes(interaction.user.id)) {
         const row = new ActionRowBuilder().addComponents(
           new ButtonBuilder().setCustomId(`leave_${id}`).setLabel("Leave Giveaway").setStyle(ButtonStyle.Danger)
         );
-        return interaction.reply({ content: "❌ You have already entered this giveaway.", ephemeral: true, components: [row] });
+        return interaction.reply({
+          content: "❌ You have already entered this giveaway.",
+          ephemeral: true,
+          components: [row]
+        });
       }
       giveaway.users.push(interaction.user.id);
       await giveaways.updateOne({ giveaway_id: id }, { $set: { users: giveaway.users } });
@@ -367,9 +390,9 @@ client.on("interactionCreate", async (interaction) => {
     if (action === "participants") {
       const total = giveaway.users.length;
       const list = giveaway.users.map(u => `<@${u}>`).join(", ") || "No participants yet.";
-      return interaction.reply({ 
-        content: `👥 Participants in Giveaway ${id}\nTotal Entries: ${total}\n${list}`, 
-        ephemeral: true 
+      return interaction.reply({
+        content: `👥 Participants in Giveaway ${id}\nTotal Entries: ${total}\n${list}`,
+        ephemeral: true
       });
     }
   }
@@ -405,7 +428,7 @@ async function rerollGiveaway(id, channel) {
 setInterval(async () => {
   const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
   try {
-    const result = await db.collection("giveaways").deleteMany({ createdAt: { $lt: cutoff } });
+    const result = await db.collection("giveaways").deleteMany({ endTime: { $lt: cutoff } });
     if (result.deletedCount > 0) {
       console.log(`🗑️ Cleaned up ${result.deletedCount} old giveaways`);
     }
