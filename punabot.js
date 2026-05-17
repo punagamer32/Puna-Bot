@@ -307,10 +307,31 @@ if (message.channel.type === ChannelType.DM) {
         .setCustomId(`participants_${giveawayId}`)
         .setLabel("Participants")
         .setStyle(ButtonStyle.Secondary)
-    );
-    message.channel.send({
-      content: `🎉 **Giveaway Started!**\nPrize: ${prize}\nDuration: ${duration}\nWinners: ${winners}\nInformation: ${extra.join(" ")}\nCreator: ${message.author}\nID: ${giveawayId}`,
-      components: [row]
+          );
+          message.channel.send({
+            content: `🎉 **Giveaway Started!**\nPrize: ${prize}\nDuration: ${duration}\nWinners: ${winners}\nInformation: ${extra.join(" ")}\nCreator: ${message.author}\nID: ${giveawayId}`,
+            components: [row]
+            if (message.content.startsWith('!gd')) {
+        const player = message.content.split(' ')[1];
+        if (!player) return message.reply('❌ Please provide a player name.');
+        try {
+          const res = await fetch(`https://gdbrowser.com/api/profile/${encodeURIComponent(player)}`);
+          const data = await res.json();
+          if (!data || data.error) {
+            return message.reply(`⚠️ Could not find stats for ${player}.`);
+          }
+          const baseStats = `⭐ Stars: ${data.stars}
+      🌙 Moons: ${data.moons}
+      🔑 Secret Coins: ${data.coins}
+      💰 User Coins: ${data.userCoins}
+      👹 Demons: ${data.demons}
+      🎨 Creator Points: ${data.creatorPoints}`;
+          return message.channel.send(`📊 Stats for **${player}**\n${baseStats}`);
+        } catch (err) {
+          console.error(err);
+          return message.reply('⚠️ Error fetching GD stats.');
+        }
+      }
     });
     setTimeout(async () => {
       try {
