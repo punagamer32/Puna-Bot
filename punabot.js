@@ -272,26 +272,26 @@ if (message.channel.type === ChannelType.DM) {
   🔑 Secret Coins: ${data.coins}
   💰 User Coins: ${data.userCoins}
   👹 Demons: ${data.demons}
-  🎨 Creator Points: ${data.creatorPoints}`;
-      return message.channel.send(`📊 Stats for **${player}**\n${baseStats}`);
+  📊 Rank: ${data.rank}
+  💎 Diamonds: ${data.diamonds}
+  🎨 Creator Points: ${data.cp}`;
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`levels_${player}`)
+          .setLabel("Level Stats")
+          .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
+          .setCustomId(`demons_${player}`)
+          .setLabel("Demons")
+          .setStyle(ButtonStyle.Danger)
+      );
+      return message.channel.send({
+        content: `📊 Stats for **${player}**\n${baseStats}`,
+        components: [row]
+      });
     } catch (err) {
       console.error(err);
       return message.reply('⚠️ Error fetching GD stats.');
-    }
-  }
-  if (message.author.bot) return;
-  const args = message.content.split(" ");
-  const cmd = args.shift().toLowerCase();
-  if (cmd === "!giveaway" && args[0] === "roles") {
-    const role = message.mentions.roles.first();
-    if (!role) return message.reply("❌ Mention a role.");
-    const existing = await giveawayRoles.findOne({ guildId: message.guild.id, roleId: role.id });
-    if (existing) {
-      await giveawayRoles.deleteOne({ guildId: message.guild.id, roleId: role.id });
-      return message.reply(`🔄 Removed ${role} from giveaway managers.`);
-    } else {
-      await giveawayRoles.insertOne({ guildId: message.guild.id, roleId: role.id });
-      return message.reply(`✅ Added ${role} as giveaway manager.`);
     }
   }
   if (cmd === "!giveaway" && args[0] === "create") {
@@ -359,6 +359,34 @@ if (message.channel.type === ChannelType.DM) {
 });
 client.on("interactionCreate", async (interaction) => {
   if (!interaction.isButton()) return;
+  if (interaction.isButton()) {
+  if (interaction.customId.startsWith("levels_")) {
+    const player = interaction.customId.split("_")[1];
+    const res = await fetch(`https://gdbrowser.com/api/profile/${encodeURIComponent(player)}`);
+    const data = await res.json();
+    const classic = data.classicLevelsCompleted;
+    const platformer = data.platformerLevelsCompleted;
+    return interaction.reply({
+      content: `📊 **Level Stats for ${player}**\n\n` +
+        `🎮 Classic:\nAuto: ${classic.auto}, Easy: ${classic.easy}, Normal: ${classic.normal}, Hard: ${classic.hard}, Harder: ${classic.harder}, Insane: ${classic.insane}\n` +
+        `🎮 Platformer:\nAuto: ${platformer.auto}, Easy: ${platformer.easy}, Normal: ${platformer.normal}, Hard: ${platformer.hard}, Harder: ${platformer.harder}, Insane: ${platformer.insane}`,
+      ephemeral: true
+    });
+  }
+  if (interaction.customId.startsWith("demons_")) {
+    const player = interaction.customId.split("_")[1];
+    const res = await fetch(`https://gdbrowser.com/api/profile/${encodeURIComponent(player)}`);
+    const data = await res.json();
+    const classic = data.classicDemonsCompleted;
+    const platformer = data.platformerDemonsCompleted;
+    return interaction.reply({
+      content: `👹 **Demon Stats for ${player}**\n\n` +
+        `🎮 Classic:\nEasy: ${classic.easy}, Medium: ${classic.medium}, Hard: ${classic.hard}, Insane: ${classic.insane}, Extreme: ${classic.extreme}\n` +
+        `🎮 Platformer:\nEasy: ${platformer.easy}, Medium: ${platformer.medium}, Hard: ${platformer.hard}, Insane: ${platformer.insane}, Extreme: ${platformer.extreme}`,
+      ephemeral: true
+    });
+  }
+}
   if (interaction.customId === "triviaAnswer") {
     // existing trivia modal logic
     const modal = new ModalBuilder()
