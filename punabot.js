@@ -267,7 +267,7 @@ if (message.channel.type === ChannelType.DM) {
       if (!data || data.error) {
         return message.reply(`⚠️ Could not find stats for ${player}.`);
       }
-      const baseStats = `⭐ Stars: ${data.stars}
+      const baseStats = ` ⭐ Stars: ${data.stars}
   🌙 Moons: ${data.moons}
   🔑 Secret Coins: ${data.coins}
   💰 User Coins: ${data.userCoins}
@@ -286,7 +286,7 @@ if (message.channel.type === ChannelType.DM) {
           .setStyle(ButtonStyle.Danger)
       );
       return message.channel.send({
-        content: `📊 Stats for **${player}**\n${baseStats}`,
+        content: ` 📊 Stats for **${player}**\n${baseStats}`,
         components: [row]
       });
     } catch (err) {
@@ -294,7 +294,30 @@ if (message.channel.type === ChannelType.DM) {
       return message.reply('⚠️ Error fetching GD stats.');
     }
   }
-  if (cmd === "!giveaway" && args[0] === "create") {
+  if (message.content.startsWith('!level')) {
+  const levelId = message.content.split(' ')[1];
+  if (!levelId) return message.reply('❌ Please provide a level ID.');
+  try {
+    const res = await fetch(`https://gdbrowser.com/api/level/${encodeURIComponent(levelId)}`);
+    const data = await res.json();
+    if (!data || data.error) {
+      return message.reply(`⚠️ Could not find level with ID ${levelId}.`);
+    }
+    const levelStats = `🎮 **${data.name}** by ${data.author}
+🆔 ID: ${data.id}
+📖 Description: ${data.description || "No description"}
+⚡ Difficulty: ${data.difficulty}
+⬇️ Downloads: ${data.downloads}
+❤️ Likes: ${data.likes}
+📏 Length: ${data.length}
+🎵 Song: ${data.songName} by ${data.songAuthor}`;
+    return message.channel.send(levelStats);
+  } catch (err) {
+    console.error(err);
+    return message.reply('⚠️ Error fetching level stats.');
+  }
+}
+if (cmd === "!giveaway" && args[0] === "create") {
     const [prize, duration, winners, ...extra] = args.slice(1);
     if (!prize || !duration || !winners) return message.reply("❌ Usage: !giveaway create {prize} {duration} {winners} {extra info}");
     const allowedRoles = await giveawayRoles.find({ guildId: message.guild.id }).toArray();
