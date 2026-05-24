@@ -414,12 +414,9 @@ if (cmd === "!giveaway" && args[0] === "create") {
     await rerollGiveaway(id, message.channel);
   }
 });
-client.on("interactionCreate", async (interaction) => {
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
-
   const { commandName } = interaction;
-
   if (commandName === 'ping') return interaction.reply('Pong! I am here!');
   if (commandName === 'echo') return interaction.reply('Echo rips through your ears!');
   if (commandName === 'joke') {
