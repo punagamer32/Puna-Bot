@@ -42,8 +42,6 @@ if (!MONGO_URI) {
 const clientDB = new MongoClient(MONGO_URI);
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const HYPIXEL_KEY = process.env.HYPIXEL_KEY;
-const guildId = interaction.guildId;
-const state = triviaState[guildId];
 // --- Discord client ---
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
@@ -93,7 +91,7 @@ client.on('messageCreate', async (message) => {
   }
   if (message.content === '!trivia') {
     const scoresCollection = db.collection("scores");
-    const userScore = await scoresCollection.findOne({ userId: message.author.id }); // no guildId
+    const userScore = await scoresCollection.findOne({ userId: message.author.id });
     const score = userScore?.correctCount || 0;
     return message.reply(`🏆 You have ${score} correct trivia answers!`);
   }
@@ -366,6 +364,8 @@ if (cmd === "!giveaway" && args[0] === "create") {
     await rerollGiveaway(id, message.channel);
   }
 client.on('interactionCreate', async (interaction) => {
+  const guildId = interaction.guildId;
+  const state = triviaState[guildId];
   if (interaction.isButton() && interaction.customId === 'triviaAnswer') {
     if (!state?.active || !state.currentTrivia) {
       return interaction.reply({ content: 'No active trivia round!', ephemeral: true });
@@ -433,116 +433,101 @@ client.on('interactionCreate', async (interaction) => {
     startTriviaRound(interaction.channel);
     return interaction.reply("🧠 Trivia round started!");
   }
-  if (commandName === 'altchecker') {
-    const username = message.content.split(' ')[1];
-    if (!username) return message.reply('Please provide a username!');
-    try {
-      const res = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
-      if (res.status === 204) return message.reply(`❌ ${username} is not valid.`);
-      const data = await res.json();
-      return message.reply(data?.id ? `✅ ${username} is valid.` : `❌ ${username} is not valid.`);
-    } catch (err) {
-      console.error(err);
-      return message.reply('⚠️ Error checking account.');
-    }
+if (commandName === 'altchecker') {
+  const username = interaction.options.getString('username');
+  if (!username) return interaction.reply('❌ Please provide a username!');
+  try {
+    const res = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
+    if (res.status === 204) return interaction.reply(`❌ ${username} is not valid.`);
+    const data = await res.json();
+    return interaction.reply(data?.id ? `✅ ${username} is valid.` : `❌ ${username} is not valid.`);
+  } catch (err) {
+    console.error(err);
+    return interaction.reply('⚠️ Error checking account.');
   }
-  if (commandName === 'bedwars') {
-    const username = message.content.split(' ')[1];
-    if (!username) return message.reply('Please provide a username!');
-    try {
-      const mojangRes = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
-      const mojangData = await mojangRes.json();
-      const uuid = mojangData.id;
-      const hypixelRes = await fetch(`https://api.hypixel.net/player?key=${HYPIXEL_KEY}&uuid=${uuid}`);
-      const hypixelData = await hypixelRes.json();
-      if (!hypixelData.player) return message.reply('Player not found!');
-      const bedwars = hypixelData.player.stats.Bedwars;
-      return message.reply(
-        `🏰 Bedwars stats for **${username}**:\nWins: ${bedwars.wins_bedwars}\nLosses: ${bedwars.losses_bedwars}\nKills: ${bedwars.kills_bedwars}\nDeaths: ${bedwars.deaths_bedwars}`
-      );
-    } catch (err) {
-      console.error(err);
-      return message.reply('⚠️ Error fetching stats.');
-    }
+}
+if (commandName === 'bedwars') {
+  const username = interaction.options.getString('username');
+  if (!username) return interaction.reply('❌ Please provide a username!');
+  try {
+    const mojangRes = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
+    const mojangData = await mojangRes.json();
+    const uuid = mojangData.id;
+    const hypixelRes = await fetch(`https://api.hypixel.net/player?key=${HYPIXEL_KEY}&uuid=${uuid}`);
+    const hypixelData = await hypixelRes.json();
+    if (!hypixelData.player) return interaction.reply('Player not found!');
+    const bedwars = hypixelData.player.stats.Bedwars;
+    return interaction.reply(
+      `🏰 Bedwars stats for **${username}**:\nWins: ${bedwars.wins_bedwars}\nLosses: ${bedwars.losses_bedwars}\nKills: ${bedwars.kills_bedwars}\nDeaths: ${bedwars.deaths_bedwars}`
+    );
+  } catch (err) {
+    console.error(err);
+    return interaction.reply('⚠️ Error fetching stats.');
   }
-  if (commandName === 'partychecker') {
-    const username = message.content.split(' ')[1];
-    if (!username) return message.reply('Please provide a username!');
-    try {
-      const mojangRes = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
-      const mojangData = await mojangRes.json();
-      const uuid = mojangData.id;
-      const hypixelRes = await fetch(`https://api.hypixel.net/player?key=${HYPIXEL_KEY}&uuid=${uuid}`);
-      const hypixelData = await hypixelRes.json();
-      if (!hypixelData.player) return message.reply('Player not found!');
-      const bedwars = hypixelData.player.stats.Bedwars;
-      return message.reply(
-        `🏰 Bedwars stats for **${username}**:\nWins: ${bedwars.wins_bedwars}\nLosses: ${bedwars.losses_bedwars}\nKills: ${bedwars.kills_bedwars}\nDeaths: ${bedwars.deaths_bedwars}`
-      );
-    } catch (err) {
-      console.error(err);
-      return message.reply('⚠️ Error fetching stats.');
+}
+if (commandName === 'partychecker') {
+  const username = interaction.options.getString('username');
+  if (!username) return interaction.reply('❌ Please provide a username!');
+  try {
+    const mojangRes = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
+    if (mojangRes.status === 204) return interaction.reply(`❌ ${username} is not valid.`);
+    const mojangData = await mojangRes.json();
+    const uuid = mojangData.id;
+    const sessionRes = await fetch(`https://api.hypixel.net/session?key=${HYPIXEL_KEY}&uuid=${uuid}`);
+    const sessionData = await sessionRes.json();
+    if (!sessionData.session) {
+      return interaction.reply(`ℹ️ ${username} is not currently in a party or game.`);
     }
+    const { gameType, players } = sessionData.session;
+    let reply = `🎉 Party info for **${username}**:\nGame: ${gameType}\nPlayers: ${players.join(', ')}\nLeader: ${players[0]}`;
+    return interaction.reply(reply);
+  } catch (err) {
+    console.error(err);
+    return interaction.reply('⚠️ Error fetching party info.');
   }
-  if (commandName === 'gd') {
-    const player = message.content.split(' ')[1];
-    if (!player) return message.reply('❌ Please provide a player name.');
-    try {
-      const res = await fetch(`https://gdbrowser.com/api/profile/${encodeURIComponent(player)}`);
-      const data = await res.json();
-      if (!data || data.error) {
-        return message.reply(`⚠️ Could not find stats for ${player}.`);
-      }
-      const baseStats = ` ⭐ Stars: ${data.stars}
-  🌙 Moons: ${data.moons}
-  🔑 Secret Coins: ${data.coins}
-  💰 User Coins: ${data.userCoins}
-  👹 Demons: ${data.demons}
-  📊 Rank: ${data.rank}
-  💎 Diamonds: ${data.diamonds}
-  🎨 Creator Points: ${data.cp}`;
-      const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId(`s_${player}`)
-          .setLabel(" Stats")
-          .setStyle(ButtonStyle.Primary),
-        new ButtonBuilder()
-          .setCustomId(`demons_${player}`)
-          .setLabel("Demons")
-          .setStyle(ButtonStyle.Danger)
-      );
-      return message.channel.send({
-        content: ` 📊 Stats for **${player}**\n${baseStats}`,
-        components: [row]
-      });
-    } catch (err) {
-      console.error(err);
-      return message.reply('⚠️ Error fetching GD stats.');
-    }
+}
+if (commandName === 'gd') {
+  const player = interaction.options.getString('player');
+  if (!player) return interaction.reply('❌ Please provide a player name.');
+  try {
+    const res = await fetch(`https://gdbrowser.com/api/profile/${encodeURIComponent(player)}`);
+    const data = await res.json();
+    if (!data || data.error) return interaction.reply(`⚠️ Could not find stats for ${player}.`);
+    const baseStats = `⭐ Stars: ${data.stars}
+🌙 Moons: ${data.moons}
+🔑 Secret Coins: ${data.coins}
+💰 User Coins: ${data.userCoins}
+👹 Demons: ${data.demons}
+📊 Rank: ${data.rank}
+💎 Diamonds: ${data.diamonds}
+🎨 Creator Points: ${data.cp}`;
+    return interaction.reply(`📊 Stats for **${player}**\n${baseStats}`);
+  } catch (err) {
+    console.error(err);
+    return interaction.reply('⚠️ Error fetching GD stats.');
   }
-  if (commandName === 'level') {
-    const levelId = message.content.split(' ')[1];
-    if (!levelId) return message.reply('❌ Please provide a level ID.');
-    try {
-      const res = await fetch(`https://gdbrowser.com/api/level/${encodeURIComponent(levelId)}`);
-      const data = await res.json();
-      if (!data || data.error) {
-        return message.reply(`⚠️ Could not find level with ID ${levelId}.`);
-      }
-      const levelStats = `🎮 **${data.name}** by ${data.author}
-  🆔 ID: ${data.id}
-  📖 Description: ${data.description || "No description"}
-  ⚡ Difficulty: ${data.difficulty}
-  ⬇️ Downloads: ${data.downloads}
-  ❤️ Likes: ${data.likes}
-  📏 Length: ${data.length}
-  🎵 Song: ${data.songName} by ${data.songAuthor}`;
-      return message.channel.send(levelStats);
-    } catch (err) {
-      console.error(err);
-      return message.reply('⚠️ Error fetching level stats.');
-    }
+}
+if (commandName === 'level') {
+  const levelId = interaction.options.getString('id');
+  if (!levelId) return interaction.reply('❌ Please provide a level ID.');
+  try {
+    const res = await fetch(`https://gdbrowser.com/api/level/${encodeURIComponent(levelId)}`);
+    const data = await res.json();
+    if (!data || data.error) return interaction.reply(`⚠️ Could not find level with ID ${levelId}.`);
+    const levelStats = `🎮 **${data.name}** by ${data.author}
+🆔 ID: ${data.id}
+📖 Description: ${data.description || "No description"}
+⚡ Difficulty: ${data.difficulty}
+⬇️ Downloads: ${data.downloads}
+❤️ Likes: ${data.likes}
+📏 Length: ${data.length}
+🎵 Song: ${data.songName} by ${data.songAuthor}`;
+    return interaction.reply(levelStats);
+  } catch (err) {
+    console.error(err);
+    return interaction.reply('⚠️ Error fetching level stats.');
   }
+}
   if (commandName === 'status') {
     const mongoStatus = db ? "✅ Connected" : "❌ Not connected";
     const discordStatus = client.user ? `✅ Logged in as ${client.user.tag}` : "❌ Not logged in";
