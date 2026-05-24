@@ -1,5 +1,29 @@
 // --- punabot.js ---
-import { Client, GatewayIntentBits, ActivityType, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle, ChannelType } from 'discord.js';
+import { Client, GatewayIntentBits, ActivityType, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle, ChannelType, REST, Routes, SlashCommandBuilder } from 'discord.js';
+async function registerSlashCommands(clientId, guildId, token) {
+  const commands = [
+    new SlashCommandBuilder().setName('ping').setDescription('Replies with Pong!'),
+    new SlashCommandBuilder().setName('echo').setDescription('Replies with Echo!'),
+    new SlashCommandBuilder().setName('joke').setDescription('Replies with a random joke'),
+    new SlashCommandBuilder().setName('trivia').setDescription('Shows your trivia score'),
+    new SlashCommandBuilder().setName('triviamanual').setDescription('Start a trivia round manually'),
+    new SlashCommandBuilder().setName('altchecker').setDescription('Check if a Minecraft username is valid')
+      .addStringOption(opt => opt.setName('username').setDescription('Minecraft username').setRequired(true)),
+    new SlashCommandBuilder().setName('bedwars').setDescription('Get Hypixel Bedwars stats')
+      .addStringOption(opt => opt.setName('username').setDescription('Minecraft username').setRequired(true)),
+    new SlashCommandBuilder().setName('partychecker').setDescription('Check Hypixel party info')
+      .addStringOption(opt => opt.setName('username').setDescription('Minecraft username').setRequired(true)),
+    new SlashCommandBuilder().setName('gd').setDescription('Get Geometry Dash player stats')
+      .addStringOption(opt => opt.setName('player').setDescription('GD player name').setRequired(true)),
+    new SlashCommandBuilder().setName('level').setDescription('Get Geometry Dash level stats')
+      .addStringOption(opt => opt.setName('id').setDescription('Level ID').setRequired(true)),
+    new SlashCommandBuilder().setName('status').setDescription('Show bot and DB status'),
+    new SlashCommandBuilder().setName('help').setDescription('Show all available commands and support link')
+  ].map(cmd => cmd.toJSON());
+  const rest = new REST({ version: '10' }).setToken(token);
+  await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commands });
+  console.log('✅ Slash commands registered');
+}
 import fetch from 'node-fetch';
 import express from 'express';
 import ms from "ms";
@@ -160,27 +184,22 @@ client.on('messageCreate', async (message) => {
     }
   }
   if (message.content.startsWith('!partychecker')) {
-  const username = message.content.split(' ')[1];
-  if (!username) return message.reply('Please provide a username!');
-  try {
-    const mojangRes = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
-    if (mojangRes.status === 204) return message.reply(`❌ ${username} is not valid.`);
-    const mojangData = await mojangRes.json();
-    const uuid = mojangData.id;
-    const sessionRes = await fetch(`https://api.hypixel.net/session?key=${HYPIXEL_KEY}&uuid=${uuid}`);
-    const sessionData = await sessionRes.json();
-    if (!sessionData.session) {
-      return message.reply(`ℹ️ ${username} is not currently in a party or game.`);
-    }
-    const { gameType, players } = sessionData.session;
-    let reply = `🎉 Party info for **${username}**:\n`;
-    reply += `Game: ${gameType}\n`;
-    reply += `Players: ${players.join(', ')}\n`;
-    reply += `Leader: ${players[0]}`;
-    return message.reply(reply);
-  } catch (err) {
-    console.error(err);
-    return message.reply('⚠️ Error fetching party info.');
+    const username = message.content.split(' ')[1];
+    if (!username) return message.reply('Please provide a username!');
+    try {
+      const mojangRes = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
+      const mojangData = await mojangRes.json();
+      const uuid = mojangData.id;
+      const hypixelRes = await fetch(`https://api.hypixel.net/player?key=${HYPIXEL_KEY}&uuid=${uuid}`);
+      const hypixelData = await hypixelRes.json();
+      if (!hypixelData.player) return message.reply('Player not found!');
+      const bedwars = hypixelData.player.stats.Bedwars;
+      return message.reply(
+        `🏰 Bedwars stats for **${username}**:\nWins: ${bedwars.wins_bedwars}\nLosses: ${bedwars.losses_bedwars}\nKills: ${bedwars.kills_bedwars}\nDeaths: ${bedwars.deaths_bedwars}`
+      );
+    } catch (err) {
+      console.error(err);
+      return message.reply('⚠️ Error fetching stats.');
     }
   }
   if (message.content.startsWith('!rps')) {
@@ -293,6 +312,21 @@ if (message.channel.type === ChannelType.DM) {
       console.error(err);
       return message.reply('⚠️ Error fetching GD stats.');
     }
+    if (message.content === '!help') {
+    return message.channel.send(`📖 **Available Commands**\n
+  - !ping /ping
+  - !echo /echo
+  - !joke /joke
+  - !trivia /trivia
+  - !triviamanual /triviamanual
+  - !altchecker /altchecker <username>
+  - !bedwars /bedwars <username>
+  - !partychecker /partychecker <username>
+  - !gd /gd <player>
+  - !level /level <id>
+  - !status /status
+  
+  Need more help? Join our support server: https://discord.gg/akYas6wWdD`);
   }
   if (message.content.startsWith('!level')) {
   const levelId = message.content.split(' ')[1];
@@ -381,6 +415,162 @@ if (cmd === "!giveaway" && args[0] === "create") {
   }
 });
 client.on("interactionCreate", async (interaction) => {
+client.on('interactionCreate', async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
+
+  const { commandName } = interaction;
+
+  if (commandName === 'ping') return interaction.reply('Pong! I am here!');
+  if (commandName === 'echo') return interaction.reply('Echo rips through your ears!');
+  if (commandName === 'joke') {
+    const joke = jokes[Math.floor(Math.random() * jokes.length)];
+    return interaction.reply(joke);
+  }
+  if (commandName === 'trivia') {
+    const scoresCollection = db.collection("scores");
+    const userScore = await scoresCollection.findOne({ userId: interaction.user.id });
+    const score = userScore?.correctCount || 0;
+    return interaction.reply(`🏆 You have ${score} correct trivia answers!`);
+  }
+  if (commandName === 'triviamanual') {
+    if (!interaction.member.permissions.has('ManageGuild')) {
+      return interaction.reply("❌ You need the **Manage Server** permission to start trivia manually.");
+    }
+    startTriviaRound(interaction.channel);
+    return interaction.reply("🧠 Trivia round started!");
+  }
+  if (commandName === 'altchecker') {
+    const username = message.content.split(' ')[1];
+    if (!username) return message.reply('Please provide a username!');
+    try {
+      const res = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
+      if (res.status === 204) return message.reply(`❌ ${username} is not valid.`);
+      const data = await res.json();
+      return message.reply(data?.id ? `✅ ${username} is valid.` : `❌ ${username} is not valid.`);
+    } catch (err) {
+      console.error(err);
+      return message.reply('⚠️ Error checking account.');
+    }
+  }
+  if (commandName === 'bedwars') {
+    const username = message.content.split(' ')[1];
+    if (!username) return message.reply('Please provide a username!');
+    try {
+      const mojangRes = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
+      const mojangData = await mojangRes.json();
+      const uuid = mojangData.id;
+      const hypixelRes = await fetch(`https://api.hypixel.net/player?key=${HYPIXEL_KEY}&uuid=${uuid}`);
+      const hypixelData = await hypixelRes.json();
+      if (!hypixelData.player) return message.reply('Player not found!');
+      const bedwars = hypixelData.player.stats.Bedwars;
+      return message.reply(
+        `🏰 Bedwars stats for **${username}**:\nWins: ${bedwars.wins_bedwars}\nLosses: ${bedwars.losses_bedwars}\nKills: ${bedwars.kills_bedwars}\nDeaths: ${bedwars.deaths_bedwars}`
+      );
+    } catch (err) {
+      console.error(err);
+      return message.reply('⚠️ Error fetching stats.');
+    }
+  }
+  if (commandName === 'partychecker') {
+    const username = message.content.split(' ')[1];
+    if (!username) return message.reply('Please provide a username!');
+    try {
+      const mojangRes = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
+      const mojangData = await mojangRes.json();
+      const uuid = mojangData.id;
+      const hypixelRes = await fetch(`https://api.hypixel.net/player?key=${HYPIXEL_KEY}&uuid=${uuid}`);
+      const hypixelData = await hypixelRes.json();
+      if (!hypixelData.player) return message.reply('Player not found!');
+      const bedwars = hypixelData.player.stats.Bedwars;
+      return message.reply(
+        `🏰 Bedwars stats for **${username}**:\nWins: ${bedwars.wins_bedwars}\nLosses: ${bedwars.losses_bedwars}\nKills: ${bedwars.kills_bedwars}\nDeaths: ${bedwars.deaths_bedwars}`
+      );
+    } catch (err) {
+      console.error(err);
+      return message.reply('⚠️ Error fetching stats.');
+    }
+  }
+  if (commandName === 'gd') {
+    const player = message.content.split(' ')[1];
+    if (!player) return message.reply('❌ Please provide a player name.');
+    try {
+      const res = await fetch(`https://gdbrowser.com/api/profile/${encodeURIComponent(player)}`);
+      const data = await res.json();
+      if (!data || data.error) {
+        return message.reply(`⚠️ Could not find stats for ${player}.`);
+      }
+      const baseStats = ` ⭐ Stars: ${data.stars}
+  🌙 Moons: ${data.moons}
+  🔑 Secret Coins: ${data.coins}
+  💰 User Coins: ${data.userCoins}
+  👹 Demons: ${data.demons}
+  📊 Rank: ${data.rank}
+  💎 Diamonds: ${data.diamonds}
+  🎨 Creator Points: ${data.cp}`;
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`s_${player}`)
+          .setLabel(" Stats")
+          .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
+          .setCustomId(`demons_${player}`)
+          .setLabel("Demons")
+          .setStyle(ButtonStyle.Danger)
+      );
+      return message.channel.send({
+        content: ` 📊 Stats for **${player}**\n${baseStats}`,
+        components: [row]
+      });
+    } catch (err) {
+      console.error(err);
+      return message.reply('⚠️ Error fetching GD stats.');
+    }
+  }
+  if (commandName === 'level') {
+    const levelId = message.content.split(' ')[1];
+    if (!levelId) return message.reply('❌ Please provide a level ID.');
+    try {
+      const res = await fetch(`https://gdbrowser.com/api/level/${encodeURIComponent(levelId)}`);
+      const data = await res.json();
+      if (!data || data.error) {
+        return message.reply(`⚠️ Could not find level with ID ${levelId}.`);
+      }
+      const levelStats = `🎮 **${data.name}** by ${data.author}
+  🆔 ID: ${data.id}
+  📖 Description: ${data.description || "No description"}
+  ⚡ Difficulty: ${data.difficulty}
+  ⬇️ Downloads: ${data.downloads}
+  ❤️ Likes: ${data.likes}
+  📏 Length: ${data.length}
+  🎵 Song: ${data.songName} by ${data.songAuthor}`;
+      return message.channel.send(levelStats);
+    } catch (err) {
+      console.error(err);
+      return message.reply('⚠️ Error fetching level stats.');
+    }
+  }
+  if (commandName === 'status') {
+    const mongoStatus = db ? "✅ Connected" : "❌ Not connected";
+    const discordStatus = client.user ? `✅ Logged in as ${client.user.tag}` : "❌ Not logged in";
+    return interaction.reply(`📡 Status:\nDiscord: ${discordStatus}\nMongoDB: ${mongoStatus}`);
+  }
+  if (commandName === 'help') {
+    return interaction.reply(`📖 **Available Commands**\n
+- !ping /ping
+- !echo /echo
+- !joke /joke
+- !trivia /trivia
+- !triviamanual /triviamanual
+- !altchecker /altchecker <username>
+- !bedwars /bedwars <username>
+- !partychecker /partychecker <username>
+- !gd /gd <player>
+- !level /level <id>
+- !status /status
+
+Need more help? Join our support server: https://discord.gg/akYas6wWdD`);
+  }
+});
   if (!interaction.isButton()) return;
   if (interaction.isButton()) {
   if (interaction.customId.startsWith("levels_")) {
