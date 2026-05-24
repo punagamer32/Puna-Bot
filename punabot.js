@@ -75,7 +75,6 @@ async function startTriviaRound(channel) {
   const row = new ActionRowBuilder().addComponents(button);
   channel.send({ content: `🧠 Trivia Time!\n${currentTrivia.question}`, components: [row] });
 }
-});
 // --- Health check server ---
 const app = express();
 const PORT = process.env.PORT || 8000;
