@@ -73,26 +73,6 @@ async function startTriviaRound(channel) {
   const row = new ActionRowBuilder().addComponents(button);
   channel.send({ content: `🧠 Trivia Time!\n${currentTrivia.question}`, components: [row] });
 }
-client.on('interactionCreate', async (interaction) => {
-  const guildId = interaction.guildId;
-  const state = triviaState[guildId];
-  if (interaction.isButton() && interaction.customId === 'triviaAnswer') {
-    if (!state?.active || !state.currentTrivia) {
-      return interaction.reply({ content: 'No active trivia round!', ephemeral: true });
-    }
-    const modal = new ModalBuilder()
-      .setCustomId('triviaModal')
-      .setTitle('Trivia Answer')
-      .addComponents(
-        new ActionRowBuilder().addComponents(
-          new TextInputBuilder()
-            .setCustomId('answerField')
-            .setLabel('Your Answer')
-            .setStyle(TextInputStyle.Short)
-        )
-      );
-    return interaction.showModal(modal);
-  }
 if (interaction.isModalSubmit() && interaction.customId === 'triviaModal') {
   try {
     const guildId = interaction.guildId;
@@ -414,6 +394,25 @@ if (cmd === "!giveaway" && args[0] === "create") {
     await rerollGiveaway(id, message.channel);
   }
 client.on('interactionCreate', async (interaction) => {
+    const guildId = interaction.guildId;
+  const state = triviaState[guildId];
+  if (interaction.isButton() && interaction.customId === 'triviaAnswer') {
+    if (!state?.active || !state.currentTrivia) {
+      return interaction.reply({ content: 'No active trivia round!', ephemeral: true });
+    }
+    const modal = new ModalBuilder()
+      .setCustomId('triviaModal')
+      .setTitle('Trivia Answer')
+      .addComponents(
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId('answerField')
+            .setLabel('Your Answer')
+            .setStyle(TextInputStyle.Short)
+        )
+      );
+    return interaction.showModal(modal);
+  }
   if (!interaction.isChatInputCommand()) return;
   const { commandName } = interaction;
   if (commandName === 'ping') return interaction.reply('Pong! I am here!');
