@@ -413,7 +413,6 @@ if (cmd === "!giveaway" && args[0] === "create") {
     const id = args[1];
     await rerollGiveaway(id, message.channel);
   }
-});
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
   const { commandName } = interaction;
