@@ -262,19 +262,19 @@ if (message.channel.type === ChannelType.DM) {
       console.error(err);
       return message.reply('⚠️ Error fetching GD stats.');
     }
-    if (message.content === '!help') {
-    return message.channel.send(`📖 **Available Commands**\n
-  - !ping /ping
-  - !echo /echo
-  - !joke /joke
-  - !trivia /trivia
-  - !triviamanual /triviamanual
-  - !altchecker /altchecker <username>
-  - !bedwars /bedwars <username>
-  - !partychecker /partychecker <username>
-  - !gd /gd <player>
-  - !level /level <id>
-  - !status /status
+  if (message.content === '!help') {
+  return message.channel.send(`📖 **Available Commands**\n
+- !ping /ping
+- !echo /echo
+- !joke /joke
+- !trivia /trivia
+- !triviamanual /triviamanual
+- !altchecker /altchecker <username>
+- !bedwars /bedwars <username>
+- !partychecker /partychecker <username>
+- !gd /gd <player>
+- !level /level <id>
+- !status /status
   
   Need more help? Join our support server: https://discord.gg/akYas6wWdD`);
   }
@@ -717,6 +717,12 @@ async function startBot() {
     });
     client.once('ready', async () => {
       console.log(`✅ Logged in as ${client.user.tag}`);
+      try {
+        await registerSlashCommands(client.user.id, YOUR_GUILD_ID, DISCORD_TOKEN);
+        console.log('✅ Slash commands registered');
+      } catch (err) {
+        console.error('❌ Error registering slash commands:', err);
+      }
       client.user.setPresence({
         activities: [{
           name: '@punagamer32 On YouTube',
