@@ -42,6 +42,8 @@ if (!MONGO_URI) {
 const clientDB = new MongoClient(MONGO_URI);
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const HYPIXEL_KEY = process.env.HYPIXEL_KEY;
+const guildId = interaction.guildId;
+const state = triviaState[guildId];
 // --- Discord client ---
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
@@ -72,35 +74,6 @@ async function startTriviaRound(channel) {
     .setStyle(ButtonStyle.Primary);
   const row = new ActionRowBuilder().addComponents(button);
   channel.send({ content: `🧠 Trivia Time!\n${currentTrivia.question}`, components: [row] });
-}
-if (interaction.isModalSubmit() && interaction.customId === 'triviaModal') {
-  try {
-    const guildId = interaction.guildId;
-    const state = triviaState[guildId];
-    const guess = interaction.fields.getTextInputValue('answerField').trim();
-    if (!state?.active || !state.currentTrivia) {
-      return interaction.reply({ content: 'No active trivia round!', ephemeral: true });
-    }
-    if (guess.toLowerCase() === state.currentTrivia.answer.toLowerCase()) {
-      clearTimeout(state.timeout);
-      state.active = false;
-      state.currentTrivia = null;
-      const scoresCollection = db.collection("scores");
-      await scoresCollection.updateOne(
-        { userId: interaction.user.id },
-        { $inc: { correctCount: 1 } },
-        { upsert: true }
-      );
-      return interaction.reply(`🎉 ${interaction.user} answered correctly!`);
-    } else {
-      return interaction.reply({ content: '❌ Incorrect answer!', ephemeral: true });
-    }
-  } catch (err) {
-    console.error("Trivia modal error:", err);
-    if (!interaction.replied && !interaction.deferred) {
-      return interaction.reply({ content: "⚠️ Something went wrong processing your answer.", ephemeral: true });
-    }
-  }
 }
 });
 // --- Health check server ---
@@ -394,8 +367,6 @@ if (cmd === "!giveaway" && args[0] === "create") {
     await rerollGiveaway(id, message.channel);
   }
 client.on('interactionCreate', async (interaction) => {
-    const guildId = interaction.guildId;
-  const state = triviaState[guildId];
   if (interaction.isButton() && interaction.customId === 'triviaAnswer') {
     if (!state?.active || !state.currentTrivia) {
       return interaction.reply({ content: 'No active trivia round!', ephemeral: true });
@@ -413,6 +384,35 @@ client.on('interactionCreate', async (interaction) => {
       );
     return interaction.showModal(modal);
   }
+  if (interaction.isModalSubmit() && interaction.customId === 'triviaModal') {
+  try {
+    const guildId = interaction.guildId;
+    const state = triviaState[guildId];
+    const guess = interaction.fields.getTextInputValue('answerField').trim();
+    if (!state?.active || !state.currentTrivia) {
+      return interaction.reply({ content: 'No active trivia round!', ephemeral: true });
+    }
+    if (guess.toLowerCase() === state.currentTrivia.answer.toLowerCase()) {
+      clearTimeout(state.timeout);
+      state.active = false;
+      state.currentTrivia = null;
+      const scoresCollection = db.collection("scores");
+      await scoresCollection.updateOne(
+        { userId: interaction.user.id },
+        { $inc: { correctCount: 1 } },
+        { upsert: true }
+      );
+      return interaction.reply(`🎉 ${interaction.user} answered correctly!`);
+    } else {
+      return interaction.reply({ content: '❌ Incorrect answer!', ephemeral: true });
+    }
+  } catch (err) {
+    console.error("Trivia modal error:", err);
+    if (!interaction.replied && !interaction.deferred) {
+      return interaction.reply({ content: "⚠️ Something went wrong processing your answer.", ephemeral: true });
+    }
+  }
+}
   if (!interaction.isChatInputCommand()) return;
   const { commandName } = interaction;
   if (commandName === 'ping') return interaction.reply('Pong! I am here!');
@@ -567,7 +567,6 @@ Need more help? Join our support server: https://discord.gg/akYas6wWdD`);
   }
 });
   if (!interaction.isButton()) return;
-  if (interaction.isButton()) {
   if (interaction.customId.startsWith("levels_")) {
     const player = interaction.customId.split("_")[1];
     const res = await fetch(`https://gdbrowser.com/api/profile/${encodeURIComponent(player)}`);
