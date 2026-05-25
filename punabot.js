@@ -717,11 +717,17 @@ async function startBot() {
     });
     client.once('ready', async () => {
       console.log(`✅ Logged in as ${client.user.tag}`);
-      try {
-        await registerSlashCommands(client.user.id, YOUR_GUILD_ID, DISCORD_TOKEN);
-        console.log('✅ Slash commands registered');
-      } catch (err) {
-        console.error('❌ Error registering slash commands:', err);
+      const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
+      for (const [guildId, guild] of client.guilds.cache) {
+        try {
+          await rest.put(
+            Routes.applicationGuildCommands(client.user.id, guildId),
+            { body: commands }
+          );
+          console.log(`✅ Slash commands registered in guild: ${guild.name} (${guildId})`);
+        } catch (err) {
+          console.error(`❌ Error registering commands in guild ${guildId}:`, err);
+        }
       }
       client.user.setPresence({
         activities: [{
