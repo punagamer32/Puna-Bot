@@ -699,8 +699,12 @@ async function startBot() {
       console.log("✅ Bot login attempt complete");
     } catch (err) {
       console.error("❌ Discord login failed:", err);
-      process.exit(1);
     }
+  } catch (err) {
+    console.error("❌ Startup error:", err);
+    process.exit(1);
+  }
+}
     client.on('error', (err) => {
       console.error("❌ Discord client error:", err);
     });
