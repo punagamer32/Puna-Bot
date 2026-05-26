@@ -663,6 +663,25 @@ setInterval(async () => {
   }
 }, 150000);
 // --- Startup ---
+const commands = [
+  new SlashCommandBuilder().setName('ping').setDescription('Replies with Pong!'),
+  new SlashCommandBuilder().setName('echo').setDescription('Replies with Echo!'),
+  new SlashCommandBuilder().setName('joke').setDescription('Replies with a random joke'),
+  new SlashCommandBuilder().setName('trivia').setDescription('Shows your trivia score'),
+  new SlashCommandBuilder().setName('triviamanual').setDescription('Start a trivia round manually'),
+  new SlashCommandBuilder().setName('altchecker').setDescription('Check if a Minecraft username is valid')
+    .addStringOption(opt => opt.setName('username').setDescription('Minecraft username').setRequired(true)),
+  new SlashCommandBuilder().setName('bedwars').setDescription('Get Hypixel Bedwars stats')
+    .addStringOption(opt => opt.setName('username').setDescription('Minecraft username').setRequired(true)),
+  new SlashCommandBuilder().setName('partychecker').setDescription('Check Hypixel party info')
+    .addStringOption(opt => opt.setName('username').setDescription('Minecraft username').setRequired(true)),
+  new SlashCommandBuilder().setName('gd').setDescription('Get Geometry Dash player stats')
+    .addStringOption(opt => opt.setName('player').setDescription('GD player name').setRequired(true)),
+  new SlashCommandBuilder().setName('level').setDescription('Get Geometry Dash level stats')
+    .addStringOption(opt => opt.setName('id').setDescription('Level ID').setRequired(true)),
+  new SlashCommandBuilder().setName('status').setDescription('Show bot and DB status'),
+  new SlashCommandBuilder().setName('help').setDescription('Show all available commands and support link')
+].map(cmd => cmd.toJSON());
 if (!DISCORD_TOKEN) {
   console.error("❌ No DISCORD_TOKEN found in environment!");
   process.exit(1);
@@ -693,30 +712,19 @@ async function startBot() {
     });
     client.once('ready', async () => {
       console.log(`✅ Logged in as ${client.user.tag}`);
-      async function registerSlashCommands(clientId, guildId, token) {
-        const commands = [
-          new SlashCommandBuilder().setName('ping').setDescription('Replies with Pong!'),
-          new SlashCommandBuilder().setName('echo').setDescription('Replies with Echo!'),
-          new SlashCommandBuilder().setName('joke').setDescription('Replies with a random joke'),
-          new SlashCommandBuilder().setName('trivia').setDescription('Shows your trivia score'),
-          new SlashCommandBuilder().setName('triviamanual').setDescription('Start a trivia round manually'),
-          new SlashCommandBuilder().setName('altchecker').setDescription('Check if a Minecraft username is valid')
-            .addStringOption(opt => opt.setName('username').setDescription('Minecraft username').setRequired(true)),
-          new SlashCommandBuilder().setName('bedwars').setDescription('Get Hypixel Bedwars stats')
-            .addStringOption(opt => opt.setName('username').setDescription('Minecraft username').setRequired(true)),
-          new SlashCommandBuilder().setName('partychecker').setDescription('Check Hypixel party info')
-            .addStringOption(opt => opt.setName('username').setDescription('Minecraft username').setRequired(true)),
-          new SlashCommandBuilder().setName('gd').setDescription('Get Geometry Dash player stats')
-            .addStringOption(opt => opt.setName('player').setDescription('GD player name').setRequired(true)),
-          new SlashCommandBuilder().setName('level').setDescription('Get Geometry Dash level stats')
-            .addStringOption(opt => opt.setName('id').setDescription('Level ID').setRequired(true)),
-          new SlashCommandBuilder().setName('status').setDescription('Show bot and DB status'),
-          new SlashCommandBuilder().setName('help').setDescription('Show all available commands and support link')
-        ].map(cmd => cmd.toJSON());
-        const rest = new REST({ version: '10' }).setToken(token);
-        await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commands });
-        console.log('✅ Slash commands registered');
+      const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
+      for (const [guildId, guild] of client.guilds.cache) {
+        try {
+          await rest.put(
+            Routes.applicationGuildCommands(client.user.id, guildId),
+            { body: commands }
+          );
+          console.log(`✅ Slash commands registered in guild: ${guild.name} (${guildId})`);
+        } catch (err) {
+          console.error(`❌ Error registering commands in guild ${guildId}:`, err);
+        }
       }
+    });
       client.user.setPresence({
         activities: [{
           name: '@punagamer32 On YouTube',
