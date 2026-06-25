@@ -682,10 +682,6 @@ const commands = [
   new SlashCommandBuilder().setName('status').setDescription('Show bot and DB status'),
   new SlashCommandBuilder().setName('help').setDescription('Show all available commands and support link')
 ].map(cmd => cmd.toJSON());
-if (!DISCORD_TOKEN) {
-  console.error("❌ No DISCORD_TOKEN found in environment!");
-  process.exit(1);
-}
 async function startBot() {
   try {
     console.log("Connecting with URI:", MONGO_URI);
@@ -699,21 +695,8 @@ async function startBot() {
       console.log("✅ Bot login attempt complete");
     } catch (err) {
       console.error("❌ Discord login failed:", err);
+      process.exit(1);
     }
-  } catch (err) {
-    console.error("❌ Startup error:", err);
-    process.exit(1);
-  }
-}
-    client.on('error', (err) => {
-      console.error("❌ Discord client error:", err);
-    });
-    client.on('shardError', (err, shardId) => {
-      console.error(`❌ Shard ${shardId} error:`, err);
-    });
-    client.on('debug', (info) => {
-      console.log("🔎 Discord debug:", info);
-    });
     client.once('ready', async () => {
       console.log(`✅ Logged in as ${client.user.tag}`);
       const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
@@ -729,48 +712,9 @@ async function startBot() {
         }
       }
     });
-      client.user.setPresence({
-        activities: [{
-          name: '@punagamer32 On YouTube',
-          type: ActivityType.Streaming,
-          url: 'https://www.youtube.com/@punagamer32/live'
-        }],
-        status: 'online'
-      });
-      for (const [guildId, guild] of client.guilds.cache) {
-        try {
-          const settings = await settingsCollection.findOne({ guildId });
-          if (settings?.botChannel) {
-            const channel = await client.channels.fetch(settings.botChannel);
-            if (channel && channel.isTextBased()) {
-              console.log(`⚡ Starting trivia round immediately in ${guild.name} → ${channel.name}`);
-              startTriviaRound(channel);
-            }
-          }
-        } catch (err) {
-          console.error(`Startup trivia error in ${guild.name}:`, err);
-        }
-      }
-      setInterval(async () => {
-        for (const [guildId, guild] of client.guilds.cache) {
-          try {
-            const settings = await settingsCollection.findOne({ guildId });
-            if (settings?.botChannel) {
-              const channel = await client.channels.fetch(settings.botChannel);
-              if (channel && channel.isTextBased()) {
-                console.log(`⚡ Starting trivia round in ${guild.name} → ${channel.name}`);
-                startTriviaRound(channel);
-              }
-            }
-          } catch (err) {
-            console.error(`Trivia interval error in ${guild.name}:`, err);
-          }
-        }
-      }, 30 * 60 * 1000);
-    });
   } catch (err) {
-    console.error("❌ Startup failed:", err);
-    setTimeout(startBot, 10000);
+    console.error("❌ Startup error:", err);
+    process.exit(1);
   }
 }
 startBot();
