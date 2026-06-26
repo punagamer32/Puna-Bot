@@ -390,85 +390,86 @@ client.on('interactionCreate', async (interaction) => {
 }
   if (!interaction.isChatInputCommand()) return;
   const { commandName } = interaction;
-  if (commandName === 'ping') return interaction.reply('Pong! I am here!');
-  if (commandName === 'echo') return interaction.reply('Echo rips through your ears!');
+  await interaction.deferReply();
+  if (commandName === 'ping') return interaction.editReply('Pong! I am here!');
+  if (commandName === 'echo') return interaction.editReply('Echo rips through your ears!');
   if (commandName === 'joke') {
     const joke = jokes[Math.floor(Math.random() * jokes.length)];
-    return interaction.reply(joke);
+    return interaction.editReply(joke);
   }
   if (commandName === 'trivia') {
     const scoresCollection = db.collection("scores");
     const userScore = await scoresCollection.findOne({ userId: interaction.user.id });
     const score = userScore?.correctCount || 0;
-    return interaction.reply(`🏆 You have ${score} correct trivia answers!`);
+    return interaction.editReply(`🏆 You have ${score} correct trivia answers!`);
   }
   if (commandName === 'triviamanual') {
     if (!interaction.member.permissions.has('ManageGuild')) {
-      return interaction.reply("❌ You need the **Manage Server** permission to start trivia manually.");
+      return interaction.editReply("❌ You need the **Manage Server** permission to start trivia manually.");
     }
     startTriviaRound(interaction.channel);
-    return interaction.reply("🧠 Trivia round started!");
+    return interaction.editReply("🧠 Trivia round started!");
   }
 if (commandName === 'altchecker') {
   const username = interaction.options.getString('username');
-  if (!username) return interaction.reply('❌ Please provide a username!');
+  if (!username) return interaction.editReply('❌ Please provide a username!');
   try {
     const res = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
-    if (res.status === 204) return interaction.reply(`❌ ${username} is not valid.`);
+    if (res.status === 204) return interaction.editReply(`❌ ${username} is not valid.`);
     const data = await res.json();
-    return interaction.reply(data?.id ? `✅ ${username} is valid.` : `❌ ${username} is not valid.`);
+    return interaction.editReply(data?.id ? `✅ ${username} is valid.` : `❌ ${username} is not valid.`);
   } catch (err) {
     console.error(err);
-    return interaction.reply('⚠️ Error checking account.');
+    return interaction.editReply('⚠️ Error checking account.');
   }
 }
 if (commandName === 'bedwars') {
   const username = interaction.options.getString('username');
-  if (!username) return interaction.reply('❌ Please provide a username!');
+  if (!username) return interaction.editReply('❌ Please provide a username!');
   try {
     const mojangRes = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
     const mojangData = await mojangRes.json();
     const uuid = mojangData.id;
     const hypixelRes = await fetch(`https://api.hypixel.net/player?key=${HYPIXEL_KEY}&uuid=${uuid}`);
     const hypixelData = await hypixelRes.json();
-    if (!hypixelData.player) return interaction.reply('Player not found!');
+    if (!hypixelData.player) return interaction.editReply('Player not found!');
     const bedwars = hypixelData.player.stats.Bedwars;
-    return interaction.reply(
+    return interaction.editReply(
       `🏰 Bedwars stats for **${username}**:\nWins: ${bedwars.wins_bedwars}\nLosses: ${bedwars.losses_bedwars}\nKills: ${bedwars.kills_bedwars}\nDeaths: ${bedwars.deaths_bedwars}`
     );
   } catch (err) {
     console.error(err);
-    return interaction.reply('⚠️ Error fetching stats.');
+    return interaction.editReply('⚠️ Error fetching stats.');
   }
 }
 if (commandName === 'partychecker') {
   const username = interaction.options.getString('username');
-  if (!username) return interaction.reply('❌ Please provide a username!');
+  if (!username) return interaction.editReply('❌ Please provide a username!');
   try {
     const mojangRes = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
-    if (mojangRes.status === 204) return interaction.reply(`❌ ${username} is not valid.`);
+    if (mojangRes.status === 204) return interaction.editReply(`❌ ${username} is not valid.`);
     const mojangData = await mojangRes.json();
     const uuid = mojangData.id;
     const sessionRes = await fetch(`https://api.hypixel.net/session?key=${HYPIXEL_KEY}&uuid=${uuid}`);
     const sessionData = await sessionRes.json();
     if (!sessionData.session) {
-      return interaction.reply(`ℹ️ ${username} is not currently in a party or game.`);
+      return interaction.editReply(`ℹ️ ${username} is not currently in a party or game.`);
     }
     const { gameType, players } = sessionData.session;
     let reply = `🎉 Party info for **${username}**:\nGame: ${gameType}\nPlayers: ${players.join(', ')}\nLeader: ${players[0]}`;
-    return interaction.reply(reply);
+    return interaction.editReply(reply);
   } catch (err) {
     console.error(err);
-    return interaction.reply('⚠️ Error fetching party info.');
+    return interaction.editReply('⚠️ Error fetching party info.');
   }
 }
 if (commandName === 'gd') {
   const player = interaction.options.getString('player');
-  if (!player) return interaction.reply('❌ Please provide a player name.');
+  if (!player) return interaction.editReply('❌ Please provide a player name.');
   try {
     const res = await fetch(`https://gdbrowser.com/api/profile/${encodeURIComponent(player)}`);
     const data = await res.json();
-    if (!data || data.error) return interaction.reply(`⚠️ Could not find stats for ${player}.`);
+    if (!data || data.error) return interaction.editReply(`⚠️ Could not find stats for ${player}.`);
     const baseStats = `⭐ Stars: ${data.stars}
 🌙 Moons: ${data.moons}
 🔑 Secret Coins: ${data.coins}
@@ -477,19 +478,19 @@ if (commandName === 'gd') {
 📊 Rank: ${data.rank}
 💎 Diamonds: ${data.diamonds}
 🎨 Creator Points: ${data.cp}`;
-    return interaction.reply(`📊 Stats for **${player}**\n${baseStats}`);
+    return interaction.editReply(`📊 Stats for **${player}**\n${baseStats}`);
   } catch (err) {
     console.error(err);
-    return interaction.reply('⚠️ Error fetching GD stats.');
+    return interaction.editReply('⚠️ Error fetching GD stats.');
   }
 }
 if (commandName === 'level') {
   const levelId = interaction.options.getString('id');
-  if (!levelId) return interaction.reply('❌ Please provide a level ID.');
+  if (!levelId) return interaction.editReply('❌ Please provide a level ID.');
   try {
     const res = await fetch(`https://gdbrowser.com/api/level/${encodeURIComponent(levelId)}`);
     const data = await res.json();
-    if (!data || data.error) return interaction.reply(`⚠️ Could not find level with ID ${levelId}.`);
+    if (!data || data.error) return interaction.editReply(`⚠️ Could not find level with ID ${levelId}.`);
     const levelStats = `🎮 **${data.name}** by ${data.author}
 🆔 ID: ${data.id}
 📖 Description: ${data.description || "No description"}
@@ -498,19 +499,19 @@ if (commandName === 'level') {
 ❤️ Likes: ${data.likes}
 📏 Length: ${data.length}
 🎵 Song: ${data.songName} by ${data.songAuthor}`;
-    return interaction.reply(levelStats);
+    return interaction.editReply(levelStats);
   } catch (err) {
     console.error(err);
-    return interaction.reply('⚠️ Error fetching level stats.');
+    return interaction.editReply('⚠️ Error fetching level stats.');
   }
 }
   if (commandName === 'status') {
     const mongoStatus = db ? "✅ Connected" : "❌ Not connected";
     const discordStatus = client.user ? `✅ Logged in as ${client.user.tag}` : "❌ Not logged in";
-    return interaction.reply(`📡 Status:\nDiscord: ${discordStatus}\nMongoDB: ${mongoStatus}`);
+    return interaction.editReply(`📡 Status:\nDiscord: ${discordStatus}\nMongoDB: ${mongoStatus}`);
   }
   if (commandName === 'help') {
-    return interaction.reply(`📖 **Available Commands**\n
+    return interaction.editReply(`📖 **Available Commands**\n
 - !ping /ping
 - !echo /echo
 - !joke /joke
@@ -533,7 +534,7 @@ Need more help? Join our support server: https://discord.gg/akYas6wWdD`);
     const data = await res.json();
     const classic = data.classicLevelsCompleted;
     const platformer = data.platformerLevelsCompleted;
-    return interaction.reply({
+    return interaction.editReply({
       content: `📊 **Level Stats for ${player}**\n\n` +
         `🎮 Classic:\nAuto: ${classic.auto}, Easy: ${classic.easy}, Normal: ${classic.normal}, Hard: ${classic.hard}, Harder: ${classic.harder}, Insane: ${classic.insane}\n` +
         `🎮 Platformer:\nAuto: ${platformer.auto}, Easy: ${platformer.easy}, Normal: ${platformer.normal}, Hard: ${platformer.hard}, Harder: ${platformer.harder}, Insane: ${platformer.insane}`,
@@ -546,7 +547,7 @@ Need more help? Join our support server: https://discord.gg/akYas6wWdD`);
     const data = await res.json();
     const classic = data.classicDemonsCompleted;
     const platformer = data.platformerDemonsCompleted;
-    return interaction.reply({
+    return interaction.editReply({
       content: `👹 **Demon Stats for ${player}**\n\n` +
         `🎮 Classic:\nEasy: ${classic.easy}, Medium: ${classic.medium}, Hard: ${classic.hard}, Insane: ${classic.insane}, Extreme: ${classic.extreme}\n` +
         `🎮 Platformer:\nEasy: ${platformer.easy}, Medium: ${platformer.medium}, Hard: ${platformer.hard}, Insane: ${platformer.insane}, Extreme: ${platformer.extreme}`,
@@ -578,17 +579,17 @@ Need more help? Join our support server: https://discord.gg/akYas6wWdD`);
     const giveaways = db.collection("giveaways");
     const giveaway = await giveaways.findOne({ giveaway_id: id });
     if (!giveaway) {
-      return interaction.reply({ content: "⚠️ Giveaway not found.", ephemeral: true });
+      return interaction.editReply({ content: "⚠️ Giveaway not found.", ephemeral: true });
     }
     if (Date.now() > giveaway.endTime) {
-      return interaction.reply({ content: "⏰ This giveaway has already ended!", ephemeral: true });
+      return interaction.editReply({ content: "⏰ This giveaway has already ended!", ephemeral: true });
     }
     if (action === "enter") {
       if (giveaway.users.includes(interaction.user.id)) {
         const row = new ActionRowBuilder().addComponents(
           new ButtonBuilder().setCustomId(`leave_${id}`).setLabel("Leave Giveaway").setStyle(ButtonStyle.Danger)
         );
-        return interaction.reply({
+        return interaction.editReply({
           content: "❌ You have already entered this giveaway.",
           ephemeral: true,
           components: [row]
@@ -596,17 +597,17 @@ Need more help? Join our support server: https://discord.gg/akYas6wWdD`);
       }
       giveaway.users.push(interaction.user.id);
       await giveaways.updateOne({ giveaway_id: id }, { $set: { users: giveaway.users } });
-      return interaction.reply({ content: "✅ You have successfully entered the giveaway.", ephemeral: true });
+      return interaction.editReply({ content: "✅ You have successfully entered the giveaway.", ephemeral: true });
     }
     if (action === "leave") {
       giveaway.users = giveaway.users.filter(u => u !== interaction.user.id);
       await giveaways.updateOne({ giveaway_id: id }, { $set: { users: giveaway.users } });
-      return interaction.reply({ content: "🚪 You have left the giveaway.", ephemeral: true });
+      return interaction.editReply({ content: "🚪 You have left the giveaway.", ephemeral: true });
     }
     if (action === "participants") {
       const total = giveaway.users.length;
       const list = giveaway.users.map(u => `<@${u}>`).join(", ") || "No participants yet.";
-      return interaction.reply({
+      return interaction.editReply({
         content: `👥 Participants in Giveaway ${id}\nTotal Entries: ${total}\n${list}`,
         ephemeral: true
       });
