@@ -344,7 +344,7 @@ client.on('interactionCreate', async (interaction) => {
   const state = triviaState[guildId];
   if (interaction.isButton() && interaction.customId === 'triviaAnswer') {
     if (!state?.active || !state.currentTrivia) {
-      return interaction.reply({ content: 'No active trivia round!', ephemeral: true });
+      return interaction.editReply({ content: 'No active trivia round!', ephemeral: true });
     }
     const modal = new ModalBuilder()
       .setCustomId('triviaModal')
@@ -365,7 +365,7 @@ client.on('interactionCreate', async (interaction) => {
     const state = triviaState[guildId];
     const guess = interaction.fields.getTextInputValue('answerField').trim();
     if (!state?.active || !state.currentTrivia) {
-      return interaction.reply({ content: 'No active trivia round!', ephemeral: true });
+      return interaction.editReply({ content: 'No active trivia round!', ephemeral: true });
     }
     if (guess.toLowerCase() === state.currentTrivia.answer.toLowerCase()) {
       clearTimeout(state.timeout);
@@ -377,14 +377,14 @@ client.on('interactionCreate', async (interaction) => {
         { $inc: { correctCount: 1 } },
         { upsert: true }
       );
-      return interaction.reply(`🎉 ${interaction.user} answered correctly!`);
+      return interaction.editReply(`🎉 ${interaction.user} answered correctly!`);
     } else {
-      return interaction.reply({ content: '❌ Incorrect answer!', ephemeral: true });
+      return interaction.editReply({ content: '❌ Incorrect answer!', ephemeral: true });
     }
   } catch (err) {
     console.error("Trivia modal error:", err);
     if (!interaction.replied && !interaction.deferred) {
-      return interaction.reply({ content: "⚠️ Something went wrong processing your answer.", ephemeral: true });
+      return interaction.editReply({ content: "⚠️ Something went wrong processing your answer.", ephemeral: true });
     }
   }
 }
