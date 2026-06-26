@@ -344,7 +344,7 @@ client.on('interactionCreate', async (interaction) => {
   const state = triviaState[guildId];
   if (interaction.isButton() && interaction.customId === 'triviaAnswer') {
     if (!state?.active || !state.currentTrivia) {
-      return interaction.editReply({ content: 'No active trivia round!', ephemeral: true });
+      return interaction.reply({ content: 'No active trivia round!', ephemeral: true });
     }
     const modal = new ModalBuilder()
       .setCustomId('triviaModal')
@@ -365,7 +365,7 @@ client.on('interactionCreate', async (interaction) => {
     const state = triviaState[guildId];
     const guess = interaction.fields.getTextInputValue('answerField').trim();
     if (!state?.active || !state.currentTrivia) {
-      return interaction.editReply({ content: 'No active trivia round!', ephemeral: true });
+      return interaction.reply({ content: 'No active trivia round!', ephemeral: true });
     }
     if (guess.toLowerCase() === state.currentTrivia.answer.toLowerCase()) {
       clearTimeout(state.timeout);
@@ -379,12 +379,12 @@ client.on('interactionCreate', async (interaction) => {
       );
       return interaction.editReply(`🎉 ${interaction.user} answered correctly!`);
     } else {
-      return interaction.editReply({ content: '❌ Incorrect answer!', ephemeral: true });
+      return interaction.reply({ content: '❌ Incorrect answer!', ephemeral: true });
     }
   } catch (err) {
     console.error("Trivia modal error:", err);
     if (!interaction.replied && !interaction.deferred) {
-      return interaction.editReply({ content: "⚠️ Something went wrong processing your answer.", ephemeral: true });
+      return interaction.reply({ content: "⚠️ Something went wrong processing your answer.", ephemeral: true });
     }
   }
 }
@@ -534,7 +534,7 @@ Need more help? Join our support server: https://discord.gg/akYas6wWdD`);
     const data = await res.json();
     const classic = data.classicLevelsCompleted;
     const platformer = data.platformerLevelsCompleted;
-    return interaction.editReply({
+    return interaction.reply({
       content: `📊 **Level Stats for ${player}**\n\n` +
         `🎮 Classic:\nAuto: ${classic.auto}, Easy: ${classic.easy}, Normal: ${classic.normal}, Hard: ${classic.hard}, Harder: ${classic.harder}, Insane: ${classic.insane}\n` +
         `🎮 Platformer:\nAuto: ${platformer.auto}, Easy: ${platformer.easy}, Normal: ${platformer.normal}, Hard: ${platformer.hard}, Harder: ${platformer.harder}, Insane: ${platformer.insane}`,
@@ -547,7 +547,7 @@ Need more help? Join our support server: https://discord.gg/akYas6wWdD`);
     const data = await res.json();
     const classic = data.classicDemonsCompleted;
     const platformer = data.platformerDemonsCompleted;
-    return interaction.editReply({
+    return interaction.reply({
       content: `👹 **Demon Stats for ${player}**\n\n` +
         `🎮 Classic:\nEasy: ${classic.easy}, Medium: ${classic.medium}, Hard: ${classic.hard}, Insane: ${classic.insane}, Extreme: ${classic.extreme}\n` +
         `🎮 Platformer:\nEasy: ${platformer.easy}, Medium: ${platformer.medium}, Hard: ${platformer.hard}, Insane: ${platformer.insane}, Extreme: ${platformer.extreme}`,
@@ -579,17 +579,17 @@ Need more help? Join our support server: https://discord.gg/akYas6wWdD`);
     const giveaways = db.collection("giveaways");
     const giveaway = await giveaways.findOne({ giveaway_id: id });
     if (!giveaway) {
-      return interaction.editReply({ content: "⚠️ Giveaway not found.", ephemeral: true });
+      return interaction.reply({ content: "⚠️ Giveaway not found.", ephemeral: true });
     }
     if (Date.now() > giveaway.endTime) {
-      return interaction.editReply({ content: "⏰ This giveaway has already ended!", ephemeral: true });
+      return interaction.reply({ content: "⏰ This giveaway has already ended!", ephemeral: true });
     }
     if (action === "enter") {
       if (giveaway.users.includes(interaction.user.id)) {
         const row = new ActionRowBuilder().addComponents(
           new ButtonBuilder().setCustomId(`leave_${id}`).setLabel("Leave Giveaway").setStyle(ButtonStyle.Danger)
         );
-        return interaction.editReply({
+        return interaction.reply({
           content: "❌ You have already entered this giveaway.",
           ephemeral: true,
           components: [row]
@@ -597,17 +597,17 @@ Need more help? Join our support server: https://discord.gg/akYas6wWdD`);
       }
       giveaway.users.push(interaction.user.id);
       await giveaways.updateOne({ giveaway_id: id }, { $set: { users: giveaway.users } });
-      return interaction.editReply({ content: "✅ You have successfully entered the giveaway.", ephemeral: true });
+      return interaction.reply({ content: "✅ You have successfully entered the giveaway.", ephemeral: true });
     }
     if (action === "leave") {
       giveaway.users = giveaway.users.filter(u => u !== interaction.user.id);
       await giveaways.updateOne({ giveaway_id: id }, { $set: { users: giveaway.users } });
-      return interaction.editReply({ content: "🚪 You have left the giveaway.", ephemeral: true });
+      return interaction.reply({ content: "🚪 You have left the giveaway.", ephemeral: true });
     }
     if (action === "participants") {
       const total = giveaway.users.length;
       const list = giveaway.users.map(u => `<@${u}>`).join(", ") || "No participants yet.";
-      return interaction.editReply({
+      return interaction.reply({
         content: `👥 Participants in Giveaway ${id}\nTotal Entries: ${total}\n${list}`,
         ephemeral: true
       });
