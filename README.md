@@ -1,6 +1,6 @@
 README
 
-Hey, I'm puna here are the main details to Puna Bot discord bot.
+Hey, I'm Puna, here are the main details to Puna Bot discord bot.
 
 I started this bot as a private project, not expecting it to be this big. but as I addded more features I started to realize I could just make it public and let everyone use it.
 
@@ -10,4 +10,9 @@ NOTE: Even though I have coding skills I let AI make the code, but not change it
 
 Files:
 
-punabot.js
+punabot.js / Main code for the bot
+package.json / File to indicate dependencies
+Dockerfile / File to indicate the build to Docker
+trivia.json / File with all the trivia questions and answers
+jokes.json / File with all the jokes used in /jokes !jokes
+README.md / README (duh)
