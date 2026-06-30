@@ -10,9 +10,9 @@ NOTE: Even though I have coding skills I let AI make the code, but not change it
 
 Files:
 
-punabot.js / Main code for the bot
-package.json / File to indicate dependencies
-Dockerfile / File to indicate the build to Docker
-trivia.json / File with all the trivia questions and answers
-jokes.json / File with all the jokes used in /jokes !jokes
-README.md / README (duh)
+punabot.js         Main code for the bot
+package.json          File to indicate dependencies
+Dockerfile         File to indicate the build to Docker
+trivia.json          File with all the trivia questions and answers
+jokes.json           File with all the jokes used in /jokes !jokes
+README.md           README (duh)
